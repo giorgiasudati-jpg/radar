@@ -1,0 +1,16 @@
+{
+  "name": "RADAR",
+  "short_name": "RADAR",
+  "description": "Le uscite musicali scelte da Theo per Giorgia: giri di novità, segni d'ascolto, Hall of Fame.",
+  "lang": "it",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#ECEEE9",
+  "theme_color": "#ECEEE9",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

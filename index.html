@@ -1,0 +1,615 @@
+<!doctype html><html lang="it"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>RADAR</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="RADAR">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#ECEEE9">
+<meta name="color-scheme" content="light only">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&display=swap">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="store.js"></script>
+<style>
+/* RADAR, quarta gemella di ENLIST, TRAIN e PRACTICE (2026-11-04).
+   Stessa famiglia di PRACTICE: carta chiara, inchiostro nero, Archivo, righe sottili al posto dei riquadri, barra nera in basso.
+   Il segnale di RADAR è un verde, usato con parsimonia: uscita "top", giro nuovo non ancora visto, preferite.
+   Le copertine sono il contenuto: restano a colori. */
+:root{
+  --paper:#ECEEE9; --ink:#111311; --sig:#0E7A4E; --on-sig:#FFFFFF;
+  --mute:rgba(17,19,17,.58); --line:rgba(17,19,17,.14); --soft:rgba(17,19,17,.06); --faint:rgba(17,19,17,.24);
+  color-scheme:light;
+  --tabh:62px; --gut:20px;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0;background:var(--paper);color:var(--ink);font-family:Archivo,-apple-system,BlinkMacSystemFont,sans-serif;font-size:16px;line-height:1.42;-webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent}
+body{padding:0 0 calc(var(--tabh) + 24px + env(safe-area-inset-bottom,0))}
+button,input,select,textarea{font:inherit;color:inherit}
+a{color:inherit}
+button,.btn,.play{cursor:pointer;touch-action:manipulation;-webkit-user-select:none;user-select:none;transition:transform .08s,opacity .08s}
+button:active:not(:disabled),.btn:active,.play:active{transform:scale(.97);opacity:.8}
+main{max-width:560px;margin:0 auto;padding:4px var(--gut) 24px}
+h1,h2,h3{font-weight:800;margin:0;letter-spacing:-.02em;line-height:1}
+h1{font-size:40px;text-transform:uppercase}
+h2{font-size:22px;text-transform:uppercase;margin-bottom:12px}
+h3{font-size:15px}
+p{margin:0 0 10px}
+.cap{font-size:11px;letter-spacing:.12em;text-transform:uppercase;font-weight:600;color:var(--mute)}
+.mute{color:var(--mute)}
+.small{font-size:14px;line-height:1.45}
+.heavy{font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.05em;line-height:.85}
+.nota{border-left:2px solid var(--ink);padding:2px 0 2px 12px;margin:8px 0}
+section{padding:20px 0;border-top:1px solid var(--line)}
+section:first-of-type,section.flush{border-top:0}
+sup{font-size:10px;font-weight:600;vertical-align:top;position:relative;top:4px;letter-spacing:.02em}
+.row{display:flex;gap:10px;align-items:center}
+.row.sp{justify-content:space-between}
+
+/* testata ferma in alto */
+#top{position:sticky;top:0;z-index:4;background:var(--paper);max-width:560px;margin:0 auto;padding:calc(12px + env(safe-area-inset-top,0)) var(--gut) 10px;display:flex;justify-content:space-between;align-items:center}
+#top .word{font-weight:800;text-transform:uppercase;letter-spacing:.02em;font-size:13px;display:flex;align-items:center;gap:7px}
+#top .word i{width:9px;height:9px;border-radius:50%;background:var(--sig);display:inline-block;position:relative}
+/* giro nuovo non ancora visto: il pallino manda un'onda, come un radar */
+#top .word i.ping::after{content:"";position:absolute;inset:0;border-radius:50%;border:1.5px solid var(--sig);animation:ping 1.8s ease-out infinite}
+@keyframes ping{from{transform:scale(1);opacity:1}to{transform:scale(3.2);opacity:0}}
+#sync{font-size:11px;color:var(--mute);display:flex;gap:6px;align-items:center}
+#sync i{width:6px;height:6px;border-radius:50%;background:var(--ink);opacity:.5;display:inline-block}
+#sync.warn i{background:#C0392B;opacity:1}
+
+/* testa del giro: la data protagonista, come in PRACTICE */
+.dh{padding:18px 0 4px}
+.dh .n{font-size:132px}
+.dh .meta{display:flex;justify-content:space-between;align-items:flex-end;margin-top:14px;gap:12px}
+.dh .m{font-size:24px;text-transform:uppercase;line-height:1.05;letter-spacing:.01em}
+.dh .y{font-size:24px;color:var(--mute);line-height:1.05}
+.dh .tot{font-size:24px;line-height:1.05;text-align:right}
+.dh .tit{margin-top:14px;font-size:16px;font-weight:600;line-height:1.3}
+.prog{height:6px;background:var(--soft);margin-top:16px}
+.prog i{display:block;height:100%;background:var(--ink)}
+.progl{display:flex;justify-content:space-between;font-size:13px;color:var(--mute);margin-top:7px}
+.progl b{color:var(--ink);font-weight:700}
+
+/* schede del giro */
+.fc{display:grid;grid-template-columns:84px 1fr 48px;gap:6px 14px;padding:16px 0;border-top:1px solid var(--line);cursor:pointer}
+.fc:first-child{border-top:0}
+.fc .tx{min-width:0}
+.fc .a{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em}
+.fc .ti{font-size:21px;font-weight:450;letter-spacing:-.02em;line-height:1.1;margin-top:3px;overflow-wrap:anywhere}
+.fc .m{font-size:13px;color:var(--mute);margin-top:5px;line-height:1.3}
+.fc .why{grid-column:1/-1;font-size:14px;color:var(--mute);line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.fc .why strong,.fc .why b{color:var(--ink);font-weight:600}
+.fc .labs{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
+.fc.done>.cv,.fc.done .tx{opacity:.5}
+.play{width:48px;height:48px;border-radius:50%;border:1.5px solid var(--ink);display:grid;place-items:center;text-decoration:none;align-self:center}
+.play svg{width:16px;height:16px;margin-left:2px}
+.fc.top .play{background:var(--ink);color:var(--paper)}
+
+/* copertine */
+.cv{display:block;width:84px;height:84px;border-radius:6px;background:var(--soft);object-fit:cover}
+.cv.ph{display:grid;place-items:center;font-weight:800;font-size:26px;letter-spacing:-.04em;color:var(--faint);text-transform:uppercase}
+.cv.s{width:48px;height:48px;border-radius:4px;font-size:15px}
+.cv.l{width:100%;height:auto;aspect-ratio:1;border-radius:8px;font-size:72px}
+
+/* etichette */
+.lb{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:3px 6px;border-radius:4px;border:1px solid var(--faint);line-height:1.2;white-space:nowrap}
+.lb.top{background:var(--sig);border-color:var(--sig);color:var(--on-sig)}
+.lb.chicca{border-color:var(--ink)}
+.lb.ok{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+.lb.pref{border-color:var(--sig);color:var(--sig)}
+.lb.hof{border-color:var(--ink);background:var(--paper)}
+.lb.fut{border-style:dashed}
+
+/* righe compatte (archivio, rimasti indietro) */
+.rw{display:grid;grid-template-columns:48px 1fr auto;gap:12px;align-items:center;padding:10px 0;border-top:1px solid var(--line);cursor:pointer;width:100%;background:none;border-left:0;border-right:0;border-bottom:0;text-align:left;color:inherit}
+.rw:first-child{border-top:0}
+.rw .t1{font-size:15px;line-height:1.25;overflow-wrap:anywhere}
+.rw .t1 b{font-weight:700}
+.rw .t2{font-size:12px;color:var(--mute);margin-top:2px}
+.rw .mk{display:flex;gap:4px;align-items:center;font-size:13px}
+.rw.done .t1{color:var(--mute)}
+.mhead{display:flex;justify-content:space-between;align-items:baseline;padding:22px 0 6px;border-bottom:1.5px solid var(--ink)}
+.mhead b{font-size:15px;font-weight:800;text-transform:uppercase;letter-spacing:.02em}
+.mhead span{font-size:12px;color:var(--mute)}
+
+/* ricerca e filtri */
+.search{width:100%;border:1.5px solid var(--ink);background:transparent;border-radius:8px;padding:12px 14px;font-size:16px;margin:18px 0 12px}
+.chips{display:flex;gap:6px}
+.chips.scroll{flex-wrap:nowrap;overflow-x:auto;margin:0 calc(-1 * var(--gut)) 8px;padding:0 var(--gut) 2px;scrollbar-width:none}
+.chips.scroll::-webkit-scrollbar{display:none}
+.chip{border:1px solid var(--faint);border-radius:8px;padding:8px 12px;background:transparent;font-size:14px;min-height:40px;white-space:nowrap;flex:none}
+.chip.on{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.count{font-size:13px;color:var(--mute);margin:6px 0 0}
+
+/* elenchi numerati */
+.nl{list-style:none;margin:0;padding:0;border-bottom:1px solid var(--faint)}
+.nl li{border-top:1px solid var(--faint)}
+.nl button{display:grid;grid-template-columns:30px 1fr auto;gap:2px 8px;align-items:baseline;padding:11px 0 12px;width:100%;background:none;border:0;text-align:left;color:inherit}
+.nl .nm{font-size:24px;font-weight:420;letter-spacing:-.025em;line-height:1.05}
+.nl .mn{font-size:15px;font-variant-numeric:tabular-nums;color:var(--mute)}
+.nl .f{grid-column:2/4;font-size:13px;color:var(--mute);line-height:1.35}
+.nl li.on .nm,.nl li.on sup{color:var(--sig)}
+
+/* hall of fame */
+.hof{display:grid;grid-template-columns:1fr 1fr;gap:22px 14px}
+.hof .it{cursor:pointer;min-width:0}
+.hof .cv{width:100%;height:auto;aspect-ratio:1}
+.hof .a{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-top:8px}
+.hof .ti{font-size:17px;line-height:1.15;margin-top:2px;letter-spacing:-.01em}
+.hof .nota{font-size:13px;color:var(--mute);margin-top:6px}
+
+/* pulsanti */
+.btn{border:1.5px solid var(--ink);background:transparent;border-radius:8px;padding:10px 16px;font-weight:600;display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:52px;text-decoration:none;color:var(--ink)}
+.btn.full{background:var(--ink);color:var(--paper)}
+.btn.wide{width:100%}
+.btn:disabled{opacity:.3;cursor:default}
+.link{background:none;border:0;padding:8px 0;color:var(--mute);text-decoration:underline;text-underline-offset:3px;min-height:44px}
+.seg{display:grid;grid-template-columns:repeat(3,1fr);border:1.5px solid var(--ink);border-radius:8px;overflow:hidden}
+.seg button{border:0;border-left:1.5px solid var(--ink);background:transparent;padding:10px 4px;min-height:52px;font-weight:600;font-size:14px;line-height:1.15}
+.seg button:first-child{border-left:0}
+.seg button.on{background:var(--ink);color:var(--paper)}
+.seg button.on.pref{background:var(--sig);color:var(--on-sig)}
+.check{display:flex;gap:14px;align-items:center;padding:8px 0;background:none;border:0;width:100%;text-align:left;min-height:52px;font-size:17px;line-height:1.3}
+.check .box{width:26px;height:26px;border:1.5px solid var(--ink);border-radius:4px;flex:none;display:grid;place-items:center;color:var(--paper)}
+.check .box svg{width:16px;height:16px}
+.check.on .box{background:var(--ink)}
+.check small{display:block;font-size:13px;color:var(--mute)}
+
+/* numeri */
+.kpis{display:grid;grid-template-columns:1fr 1fr;gap:18px 16px}
+.kpi{border-top:1.5px solid var(--ink);padding-top:10px}
+.kpi .v{font-size:60px}
+.kpi .l{font-size:13px;color:var(--mute);margin-top:6px}
+.bars{display:flex;flex-direction:column;gap:10px;margin-top:8px}
+.bar{display:grid;grid-template-columns:104px 1fr 32px;gap:10px;align-items:center;font-size:14px}
+.bar .t{height:6px;background:var(--soft)}
+.bar .t i{display:block;height:100%;background:var(--sig)}
+.bar .n{text-align:right;font-variant-numeric:tabular-nums}
+
+/* pagine che si aprono */
+details{border-top:1px solid var(--faint)}
+details:last-of-type{border-bottom:1px solid var(--faint)}
+summary{list-style:none;cursor:pointer;padding:13px 0;display:flex;justify-content:space-between;align-items:center;gap:12px;min-height:52px}
+summary::-webkit-details-marker{display:none}
+summary::after{content:"+";font-size:24px;font-weight:300;line-height:1}
+details[open] summary::after{content:"–"}
+summary b{font-size:17px;font-weight:700}
+summary span{font-size:12px;color:var(--mute);margin-left:6px;font-weight:500;text-transform:uppercase;letter-spacing:.06em}
+.dbody{padding:0 0 16px;font-size:14px}
+.dbody dl{margin:8px 0 0}
+.dbody dt{font-weight:700;margin-top:10px}
+.dbody dd{margin:2px 0 0;color:var(--mute)}
+.src{padding:10px 0;border-top:1px solid var(--line)}
+.src:first-child{border-top:0}
+.src .lk{display:flex;flex-wrap:wrap;gap:4px 14px;margin-top:4px}
+.src .lk a{text-underline-offset:3px}
+
+/* barra in basso */
+#tabs{position:fixed;left:0;right:0;bottom:0;display:grid;grid-template-columns:repeat(4,1fr);gap:4px;background:var(--ink);padding:6px 8px calc(6px + env(safe-area-inset-bottom,0));z-index:5}
+#tabs button{border:0;background:transparent;color:var(--paper);padding:6px 2px;border-radius:10px;font-weight:600;font-size:13px;height:calc(var(--tabh) - 12px);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;position:relative}
+#tabs button:active{transform:none}
+#tabs button sup{opacity:.55;top:0;font-size:10px;line-height:1}
+#tabs button.on{background:var(--paper);color:var(--ink)}
+#tabs button.on sup{color:var(--sig);opacity:1}
+#tabs button .liv{position:absolute;top:8px;right:calc(50% - 26px);width:7px;height:7px;border-radius:50%;background:var(--sig);box-shadow:0 0 0 2px var(--ink)}
+
+/* scheda dell'uscita: foglio che sale dal basso */
+dialog{border:0;border-radius:18px 18px 0 0;padding:0;background:var(--paper);color:var(--ink);width:100%;max-width:560px;margin:auto auto 0;max-height:calc(100dvh - 40px);overflow-y:auto;overscroll-behavior:contain}
+dialog[open]{animation:sheet .22s ease-out}
+@keyframes sheet{from{transform:translateY(100%)}to{transform:none}}
+dialog::backdrop{background:rgba(10,10,10,.45)}
+.frm{padding:10px var(--gut) calc(20px + env(safe-area-inset-bottom,0));display:flex;flex-direction:column;gap:14px}
+.frm::before{content:"";width:40px;height:5px;border-radius:3px;background:var(--faint);align-self:center;margin-bottom:4px}
+.frm label{display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:600}
+.frm label textarea,.frm label input{font-weight:400}
+.sh .cvw{max-width:320px;width:100%;align-self:center}
+.sh .a{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.06em}
+.sh .ti{font-size:30px;font-weight:500;letter-spacing:-.025em;line-height:1.05;margin-top:4px;text-transform:none}
+.sh .m{font-size:14px;color:var(--mute);margin-top:8px}
+.sh h3{margin-top:6px;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--mute);font-weight:600}
+.sh .body{font-size:15px;line-height:1.5}
+.sh .body strong{font-weight:700}
+.sh .cred{font-size:14px;line-height:1.5}
+.sh .row .btn{flex:1}
+.saved{font-size:12px;color:var(--mute);min-height:16px;margin-top:-6px}
+textarea,input[type=text],input[type=email],input[type=password],input[type=search]{width:100%;border:1px solid var(--faint);background:transparent;border-radius:8px;padding:11px 12px;font-size:16px}
+textarea{min-height:84px;resize:vertical}
+pre.copy{white-space:pre-wrap;font:13px/1.45 ui-monospace,Menlo,monospace;background:var(--soft);padding:12px;border-radius:8px;max-height:50vh;overflow:auto;-webkit-user-select:text;user-select:text}
+
+#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(var(--tabh) + 16px + env(safe-area-inset-bottom,0));background:var(--ink);color:var(--paper);padding:10px 16px;border-radius:8px;font-weight:600;font-size:13px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:9;white-space:nowrap}
+#toast.on{opacity:1}
+.login{max-width:420px;margin:30px auto}
+.login form{display:flex;flex-direction:column;gap:12px;margin-top:16px}
+.empty{padding:28px 0;color:var(--mute)}
+</style></head><body>
+<header id="top"><span class="word"><i id="dot"></i>radar</span><span id="sync"><i></i><span>…</span></span></header>
+<main id="main"><section><p class="mute">Carico…</p></section></main>
+<nav id="tabs" hidden></nav>
+<dialog id="dlg"></dialog>
+<input type="file" id="file" accept="application/json,.json" hidden>
+<div id="toast"></div>
+<script>
+/* ===== utilità ===== */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const pad=n=>String(n).padStart(2,"0");
+const ymd=d=>{d=d||new Date();return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());};
+const parseD=s=>{const [y,m,d]=s.split("-").map(Number);return new Date(y,(m||1)-1,d||1);};
+const MESI=["gennaio","febbraio","marzo","aprile","maggio","giugno","luglio","agosto","settembre","ottobre","novembre","dicembre"];
+const dataLunga=s=>{const d=parseD(s);return d.getDate()+" "+MESI[d.getMonth()]+" "+d.getFullYear();};
+const dataCorta=s=>{const d=parseD(s);return d.getDate()+" "+MESI[d.getMonth()];};
+const P_=Store.DEMO?"radar-demo-":"radar-";
+const loadLS=k=>{try{return JSON.parse(localStorage.getItem(P_+k)||"null");}catch(e){return null;}};
+const saveLS=(k,v)=>{try{localStorage.setItem(P_+k,JSON.stringify(v));}catch(e){}};
+function toast(t){const el=$("#toast");el.textContent=t;el.classList.add("on");clearTimeout(toast.t);toast.t=setTimeout(()=>el.classList.remove("on"),2200);}
+/* i testi delle uscite li scrive Claude: si tengono solo grassetti, corsivi e a capo */
+const safe=h=>String(h||"").replace(/<(?!\/?(strong|em|b|i|br)\b)[^>]*>/gi,"").replace(/<(\/?)(strong|em|b|i|br)\b[^>]*>/gi,"<$1$2>");
+const plain=h=>String(h||"").replace(/<[^>]+>/g,"").replace(/&amp;/g,"&");
+const norm=s=>String(s||"").normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase();
+const TIPI={album:"Album",singolo:"Singolo",ep:"EP",live:"Live"};
+const TAGS={rnb:"R&B / soul",pop:"Pop",indie:"Indie",elettronica:"Elettronica",jazz:"Jazz",italia:"Italia"};
+const VOTI={preferita:"Preferita",studiare:"Da studiare","non-in-target":"Non fa per me"};
+const ICON={play:'<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 1.5v13l11-6.5z" fill="currentColor"/></svg>',
+  check:'<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 8.5l3.5 3.5 7.5-8" fill="none" stroke="currentColor" stroke-width="2.2"/></svg>'};
+
+/* ===== stato ===== */
+let U=[],G=[],B=null,AGG="",byId=new Map(),dataReady=false,booted=false;
+const S={segni:{},imports:[]};
+const ui={tab:loadLS("tab")||"novita",giro:null,q:"",fs:"tutte",ft:"",open:null};
+
+/* i segni di un'uscita. Le due uscite che Theo aveva già messo in Hall of Fame valgono finché non le cambi tu */
+function seg(u){const s=S.segni[u.id];if(s)return s;return u.hof?{hof:true,hofNota:u.hofNota||"",seed:true}:{};}
+function saveSeg(u,patch){
+  const cur=Object.assign({},seg(u));delete cur.seed;
+  const d=Object.assign({ascoltata:false,voto:"",nota:"",hof:false,hofNota:""},cur,patch,{agg:new Date().toISOString()});
+  if(patch.ascoltata&&!cur.ascoltata)d.quando=ymd();
+  Store.doc("radar_segni/"+u.id).set(d);
+}
+const giriVeri=()=>G.filter(g=>!g.archivio).sort((a,b)=>b.data.localeCompare(a.data));
+const ultimoGiro=()=>(giriVeri()[0]||{}).data;
+const delGiro=d=>U.filter(u=>u.giro===d);
+const ordina=list=>list.slice().sort((a,b)=>(b.top-a.top)||(b.chicca-a.chicca)||b.data.localeCompare(a.data));
+const nonVisto=()=>{const l=ultimoGiro();return !!l&&(loadLS("visto")||"")<l;};
+
+/* ===== pezzi ===== */
+function cover(u,cls,size){
+  if(u.cover)return `<img class="cv ${cls||""}" src="${esc(u.cover.replace(/\/\d+x\d+bb\./,"/"+(size||200)+"x"+(size||200)+"bb."))}" alt="" loading="lazy" crossorigin="anonymous" referrerpolicy="no-referrer">`;
+  const ini=plain(u.artista).split(/\s+/).filter(Boolean).slice(0,2).map(w=>w[0]).join("");
+  return `<div class="cv ph ${cls||""}"><span>${esc(ini)}</span></div>`;
+}
+const cleanT=t=>String(t).replace(/\((singolo|single|versione ampliata|EP)\)/gi,"").trim();
+const appleLink=u=>u.apple||"https://music.apple.com/it/search?term="+encodeURIComponent(plain(u.artista)+" "+cleanT(plain(u.titolo)));
+const ytLink=u=>"https://www.youtube.com/results?search_query="+encodeURIComponent(plain(u.artista)+" "+plain(u.titolo));
+const futura=u=>u.data>ymd();
+/* "TBD", "n/d" e simili non dicono niente: non si mostrano */
+const vuoto=v=>!v||/^(tbd|n\/?d|n\.d\.|—|-|\?)$/i.test(String(v).trim());
+function labels(u,s){
+  const l=[];
+  if(u.top)l.push('<span class="lb top">Top</span>');
+  if(u.chicca)l.push('<span class="lb chicca">Chicca</span>');
+  if(futura(u))l.push(`<span class="lb fut">Esce il ${dataCorta(u.data)}</span>`);
+  if(s.ascoltata)l.push(`<span class="lb ok">${ICON.check.replace('viewBox','width="10" height="10" viewBox')} Ascoltata</span>`);
+  if(s.voto)l.push(`<span class="lb ${s.voto==="preferita"?"pref":""}">${VOTI[s.voto]}</span>`);
+  if(s.hof)l.push('<span class="lb hof">Hall of Fame</span>');
+  return l.join("");
+}
+const meta=u=>[TIPI[u.tipo]||u.tipo,u.genere].filter(Boolean).map(esc).join(" · ");
+function card(u){
+  const s=seg(u);
+  return `<article class="fc${u.top?" top":""}${s.ascoltata?" done":""}" data-act="open" data-id="${esc(u.id)}">
+    ${cover(u,"",200)}
+    <div class="tx"><div class="a">${esc(u.artista)}</div><div class="ti">${esc(u.titolo)}</div><div class="m">${meta(u)}</div><div class="labs">${labels(u,s)}</div></div>
+    <a class="play" data-act="play" href="${esc(appleLink(u))}" target="_blank" rel="noopener" aria-label="Apri in Musica">${ICON.play}</a>
+    <div class="why">${safe(u.perche)}</div>
+  </article>`;
+}
+function rowItem(u){
+  const s=seg(u);const mk=[];
+  if(s.hof)mk.push('<span class="lb hof">HoF</span>');
+  if(s.voto==="preferita")mk.push('<span class="lb pref">Pref.</span>');else if(s.voto==="studiare")mk.push('<span class="lb">Studio</span>');else if(s.voto)mk.push('<span class="lb">No</span>');
+  if(s.ascoltata)mk.push(`<span class="lb ok">${ICON.check.replace('viewBox','width="10" height="10" viewBox')}</span>`);
+  else if(u.top)mk.push('<span class="lb top">Top</span>');
+  return `<button class="rw${s.ascoltata?" done":""}" data-act="open" data-id="${esc(u.id)}">${cover(u,"s",100)}
+    <div><div class="t1"><b>${esc(u.artista)}</b> — ${esc(u.titolo)}</div><div class="t2">${esc(dataCorta(u.data))} · ${meta(u)}</div></div>
+    <div class="mk">${mk.join("")}</div></button>`;
+}
+
+/* ===== schermate ===== */
+function vNovita(){
+  const last=ultimoGiro();if(!last)return `<section><p class="empty">Nessun giro ancora.</p></section>`;
+  const gd=ui.giro||last;const g=G.find(x=>x.data===gd)||{data:gd,titolo:""};
+  const list=ordina(delGiro(gd));const left=list.filter(u=>!seg(u).ascoltata).length;const fatto=list.length-left;
+  if(gd===last)saveLS("visto",last);
+  const d=parseD(gd);
+  let h=`<section class="flush"><div class="dh">
+    <div class="cap">${gd===last?"Ultimo giro":"Giro del"}</div>
+    <div class="heavy n">${d.getDate()}</div>
+    <div class="meta"><div><div class="m">${MESI[d.getMonth()]}</div><div class="y">${d.getFullYear()}</div></div><div class="tot">${list.length}<br><span class="mute">uscite</span></div></div>
+    ${g.titolo?`<div class="tit">${esc(g.titolo)}</div>`:""}${g.nota?`<div class="nota small">${safe(g.nota)}</div>`:""}
+    <div class="prog"><i style="width:${list.length?Math.round(fatto/list.length*100):0}%"></i></div>
+    <div class="progl"><span><b>${left}</b> da ascoltare</span><span>${fatto} ascoltate</span></div>
+  </div>${gd!==last?`<button class="link" data-act="giro" data-d="">← Torna all'ultimo giro</button>`:""}</section>
+  <section class="flush" style="padding-top:4px">${list.map(card).join("")}</section>`;
+  if(gd===last){
+    const prev=giriVeri().slice(1).map(x=>x.data);
+    const indietro=U.filter(u=>prev.includes(u.giro)&&u.top&&!seg(u).ascoltata&&!seg(u).voto).sort((a,b)=>b.giro.localeCompare(a.giro)||b.data.localeCompare(a.data));
+    if(indietro.length)h+=`<section><h2>Rimasti indietro</h2><p class="small mute">Le uscite top dei giri passati che non hai ancora sentito.</p>
+      <div>${indietro.slice(0,6).map(rowItem).join("")}</div>${indietro.length>6?`<p class="count">E altre ${indietro.length-6} nell'Archivio, filtro «Top» + «Da ascoltare».</p>`:""}</section>`;
+  }
+  const gl=giriVeri();
+  h+=`<section><h2>I giri</h2><ul class="nl">${gl.map((x,i)=>{const l=delGiro(x.data);const da=l.filter(u=>!seg(u).ascoltata).length;
+    return `<li class="${x.data===gd?"on":""}"><button data-act="giro" data-d="${x.data}"><sup>${pad(gl.length-i)}</sup><span class="nm">${dataCorta(x.data)}</span><span class="mn">${l.length}</span><span class="f">${esc(x.titolo||"")}${da?` · ${da} da ascoltare`:" · tutto ascoltato"}</span></button></li>`;}).join("")}</ul></section>`;
+  return h;
+}
+
+const FS=[["tutte","Tutte"],["da","Da ascoltare"],["ok","Ascoltate"],["preferita","Preferite"],["studiare","Da studiare"],["non-in-target","Non fa per me"]];
+const FT=[["","Tutti i tipi"],["top","Top"],["chicca","Chicche"],["live","Live"],["rnb","R&B / soul"],["pop","Pop"],["indie","Indie"],["elettronica","Elettronica"],["jazz","Jazz"],["italia","Italia"],["archivio","Archivio mag–giu"]];
+function filtra(){
+  const q=norm(ui.q.trim());
+  return U.filter(u=>{
+    const s=seg(u);
+    if(ui.ft==="archivio"){if(!u.archivio)return false;}
+    else if(u.archivio&&!q)return false;
+    if(ui.ft==="top"&&!u.top)return false;
+    if(ui.ft==="chicca"&&!u.chicca)return false;
+    if(ui.ft==="live"&&u.tipo!=="live")return false;
+    if(TAGS[ui.ft]&&!(u.tags||[]).includes(ui.ft))return false;
+    if(ui.fs==="da"&&s.ascoltata)return false;
+    if(ui.fs==="ok"&&!s.ascoltata)return false;
+    if(VOTI[ui.fs]&&s.voto!==ui.fs)return false;
+    if(q){const hay=norm([u.artista,u.titolo,u.genere,u.label,u.provenienza,plain(u.crediti),plain(u.perche)].join(" "));if(!q.split(/\s+/).every(w=>hay.includes(w)))return false;}
+    return true;
+  }).sort((a,b)=>b.data.localeCompare(a.data));
+}
+function vArchivio(){
+  const list=filtra();
+  const groups=[];let cur=null;
+  for(const u of list){const k=u.data.slice(0,7);if(!cur||cur.k!==k){cur={k,items:[]};groups.push(cur);}cur.items.push(u);}
+  return `<section class="flush"><h1 style="margin-top:18px">Archivio</h1>
+    <input class="search" id="q" type="search" placeholder="Cerca artista, titolo, produttore…" value="${esc(ui.q)}" autocomplete="off">
+    <div class="chips scroll">${FS.map(([k,l])=>`<button class="chip${ui.fs===k?" on":""}" data-act="fs" data-k="${k}">${l}</button>`).join("")}</div>
+    <div class="chips scroll">${FT.map(([k,l])=>`<button class="chip${ui.ft===k?" on":""}" data-act="ft" data-k="${k}">${l}</button>`).join("")}</div>
+    <p class="count">${list.length} ${list.length===1?"uscita":"uscite"}${ui.ft!=="archivio"&&!ui.q?" · l'archivio di maggio–giugno ha un filtro suo":""}</p></section>
+    <section class="flush" style="padding-top:0">${groups.length?groups.map(g=>{const d=parseD(g.k+"-01");
+      return `<div class="mhead"><b>${MESI[d.getMonth()]} ${d.getFullYear()}</b><span>${g.items.length}</span></div><div>${g.items.map(rowItem).join("")}</div>`;}).join(""):`<p class="empty">Niente con questi filtri.</p>`}</section>`;
+}
+
+function vHof(){
+  const list=U.filter(u=>seg(u).hof).sort((a,b)=>b.data.localeCompare(a.data));
+  return `<section class="flush"><h1 style="margin-top:18px">Hall of<br>Fame</h1>
+    <p class="small mute" style="margin-top:12px">I dischi che restano nella tua vita. «Preferita» invece serve a me per calibrare i giri: un'uscita può essere entrambe.</p></section>
+    <section class="flush" style="padding-top:4px">${list.length?`<div class="hof">${list.map(u=>`<div class="it" data-act="open" data-id="${esc(u.id)}">${cover(u,"",400)}
+      <div class="a">${esc(u.artista)}</div><div class="ti">${esc(u.titolo)}</div>${seg(u).hofNota?`<div class="nota">${esc(seg(u).hofNota)}</div>`:""}</div>`).join("")}</div>`
+      :`<p class="empty">Ancora vuota. Apri un'uscita e tocca «Hall of Fame».</p>`}</section>`;
+}
+
+function vBussola(){
+  const vivi=U.filter(u=>!u.archivio);
+  const n=f=>U.filter(f).length;
+  const asc=n(u=>seg(u).ascoltata),da=vivi.filter(u=>!seg(u).ascoltata).length,pref=n(u=>seg(u).voto==="preferita"),stu=n(u=>seg(u).voto==="studiare");
+  const tg={};U.filter(u=>seg(u).voto==="preferita").forEach(u=>(u.tags||[]).forEach(t=>tg[t]=(tg[t]||0)+1));
+  const tmax=Math.max(1,...Object.values(tg));
+  const imp=S.imports.sort((a,b)=>String(b.quando).localeCompare(String(a.quando)))[0];
+  return `<section class="flush"><h1 style="margin-top:18px">Bussola</h1>
+    <p class="small mute" style="margin-top:12px">Come stai usando il radar, e cosa cerco per te a ogni giro.</p></section>
+  <section class="flush"><div class="kpis">
+    <div class="kpi"><div class="heavy v">${asc}</div><div class="l">ascoltate</div></div>
+    <div class="kpi"><div class="heavy v">${da}</div><div class="l">da ascoltare</div></div>
+    <div class="kpi"><div class="heavy v">${pref}</div><div class="l">preferite</div></div>
+    <div class="kpi"><div class="heavy v">${stu}</div><div class="l">da studiare</div></div></div>
+    ${Object.keys(tg).length?`<h3 style="margin-top:24px">Le preferite, per genere</h3><div class="bars">${Object.entries(tg).sort((a,b)=>b[1]-a[1]).map(([t,c])=>`<div class="bar"><span>${TAGS[t]||t}</span><span class="t"><i style="width:${Math.round(c/tmax*100)}%"></i></span><span class="n">${c}</span></div>`).join("")}</div>`:""}
+  </section>
+  <section><h2>Un giro nuovo</h2><p class="small">Quando vuoi uscite fresche, copia il resoconto e incollalo in chat a Claude. Dentro c'è cosa hai ascoltato, cosa ti è piaciuto e le tue note: il giro dopo parte da lì.</p>
+    <button class="btn full wide" data-act="copia">Copia per Claude</button></section>
+  <section><h2>Cosa cerco per te</h2>
+    ${B?B.scan.map(c=>`<details><summary><b>${esc(c.titolo)}<span>${esc(c.tipo||"")}</span></b></summary><div class="dbody"><p class="mute">${esc(c.sotto||"")}</p><dl>${c.righe.map(([k,v])=>`<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join("")}</dl></div></details>`).join("")
+      +`<details><summary><b>I tuoi riferimenti<span>punto di partenza</span></b></summary><div class="dbody"><dl>${B.riferimenti.map(r=>`<dt>${esc(r.titolo)}</dt><dd>${esc(r.sotto)}<br><span style="color:var(--ink)">${esc(r.nomi)}</span>${r.nota?`<br>${esc(r.nota)}`:""}</dd>`).join("")}</dl></div></details>`:""}
+    <p class="small mute" style="margin-top:12px">Per aggiungere o togliere un nome, dimmelo in chat: «Theo, metti X tra i produttori».</p></section>
+  <section><h2>Fonti</h2>
+    ${B?B.fonti.map(f=>`<details><summary><b>${esc(f.gruppo)}<span>${f.voci.length}</span></b></summary><div class="dbody">${f.sotto?`<p class="mute">${esc(f.sotto)}</p>`:""}${f.voci.map(v=>`<div class="src"><b>${esc(v.nome)}</b> <span class="lb">${esc(v.tipo||"")}</span><div class="mute">${esc(v.nota||"")}</div>${v.link?`<div class="lk">${v.link.map(([t,h])=>`<a href="${esc(h)}" target="_blank" rel="noopener">${esc(t)}</a>`).join("")}</div>`:""}</div>`).join("")}</div></details>`).join(""):""}</section>
+  <section><h2>Dal vecchio Music Radar</h2>
+    ${imp?`<p class="small">Segni importati il ${dataLunga(ymd(new Date(imp.quando)))}: ${imp.conteggi?imp.conteggi.importati:"?"} uscite. Il file originale è conservato anche qui dentro, per sicurezza.</p>`
+      :`<p class="small">Premi il pulsante e scegli il file <b>music-radar-segni-….json</b> che hai scaricato dal vecchio Music Radar (cartella Download). Non cancella niente: se un'uscita ha già segni qui, li unisce.</p>`}
+    <button class="btn wide" data-act="importa">${imp?"Importa di nuovo":"Importa i segni"}</button></section>
+  <section><p class="small mute">Uscite aggiornate al ${AGG?dataLunga(AGG):"—"} · ${U.length} in tutto, ${vivi.length} nel radar e ${U.length-vivi.length} nell'archivio di maggio–giugno.</p>
+    ${Store.DEMO?"":`<button class="link" data-act="esci">Esci da RADAR</button>`}</section>`;
+}
+
+/* ===== scheda dell'uscita ===== */
+function segniHtml(u){
+  const s=seg(u);
+  return `<button class="check${s.ascoltata?" on":""}" data-act="asc"><span class="box">${ICON.check}</span><span>Ascoltata${s.quando?`<small>il ${dataLunga(s.quando)}</small>`:""}</span></button>
+    <div class="seg">${Object.entries(VOTI).map(([k,l])=>`<button class="${s.voto===k?"on":""}${k==="preferita"?" pref":""}" data-act="voto" data-v="${k}">${l}</button>`).join("")}</div>
+    <button class="check${s.hof?" on":""}" data-act="hof"><span class="box">${ICON.check}</span><span>Hall of Fame<small>Resta nella tua vita</small></span></button>
+    ${s.hof?`<label>Perché resta<input type="text" id="hofNota" value="${esc(s.hofNota||"")}" placeholder="Facoltativo"></label>`:""}`;
+}
+function openSheet(id){
+  const u=byId.get(id);if(!u)return;ui.open=id;
+  const s=seg(u);const g=G.find(x=>x.data===u.giro);
+  const dlg=$("#dlg");
+  dlg.innerHTML=`<div class="frm sh">
+    <div class="cvw">${cover(u,"l",600)}</div>
+    <div><div class="a">${esc(u.artista)}</div><h2 class="ti">${esc(u.titolo)}</h2>
+      <div class="m">${[futura(u)?"Esce il "+dataLunga(u.data):dataLunga(u.data),TIPI[u.tipo]||u.tipo,u.label,u.provenienza].filter(v=>!vuoto(v)).map(esc).join(" · ")}</div>
+      ${u.top||u.chicca?`<div class="row" style="margin-top:10px;gap:5px">${u.top?'<span class="lb top">Top</span>':""}${u.chicca?'<span class="lb chicca">Chicca</span>':""}</div>`:""}</div>
+    <a class="btn full wide" href="${esc(appleLink(u))}" target="_blank" rel="noopener">${ICON.play.replace('viewBox','width="13" height="13" viewBox')} ${u.apple?"Apri in Musica":"Cerca in Musica"}</a>
+    ${u.tipo==="live"||!u.apple?`<div class="row"><a class="btn" href="${esc(ytLink(u))}" target="_blank" rel="noopener">Cerca su YouTube</a>${!u.apple&&u.artistaUrl?`<a class="btn" href="${esc(u.artistaUrl)}" target="_blank" rel="noopener">Pagina artista</a>`:""}</div>`:""}
+    <h3>I tuoi segni</h3>
+    <div id="segni" style="display:flex;flex-direction:column;gap:10px">${segniHtml(u)}</div>
+    <label>Nota<textarea id="nota" placeholder="Cosa ti ha colpito, cosa rubare per JOSS o per lo studio…">${esc(s.nota||"")}</textarea></label>
+    <div class="saved" id="saved"></div>
+    <h3>Perché è nel radar</h3><div class="body nota">${safe(u.perche)||"—"}</div>
+    ${u.crediti?`<h3>Crediti</h3><div class="cred">${safe(u.crediti)}</div>`:""}
+    <p class="small mute">${[u.genere&&"Genere: "+u.genere,u.fonte&&"Fonte: "+u.fonte,g&&!g.archivio?"Giro del "+dataLunga(g.data):u.archivio?"Archivio maggio–giugno":""].filter(Boolean).map(esc).join("<br>")}${u.titoloDa||u.artistaDa?"<br>Titolo ricostruito dal catalogo Apple: nel vecchio Music Radar era incompleto.":(u.tronco||[]).length?"<br>Nel vecchio Music Radar il titolo era incompleto, e il catalogo Apple non lo ritrova.":""}</p>
+    <button class="btn wide" data-act="close">Chiudi</button>
+  </div>`;
+  if(!dlg.open)dlg.showModal();
+  dlg.scrollTop=0;
+}
+let pend=null;
+function scheduleSave(u,field,val){
+  clearTimeout(pend&&pend.t);
+  pend={u,field,val,t:setTimeout(flushPend,700)};
+  const el=$("#saved");if(el)el.textContent="…";
+}
+function flushPend(){
+  if(!pend)return;const {u,field,val}=pend;clearTimeout(pend.t);pend=null;
+  if((seg(u)[field]||"")!==val)saveSeg(u,{[field]:val});
+  const el=$("#saved");if(el)el.textContent="Salvato";
+}
+$("#dlg").addEventListener("input",e=>{
+  const u=byId.get(ui.open);if(!u)return;
+  if(e.target.id==="nota")scheduleSave(u,"nota",e.target.value);
+  if(e.target.id==="hofNota")scheduleSave(u,"hofNota",e.target.value);
+});
+$("#dlg").addEventListener("close",()=>{flushPend();ui.open=null;});
+/* tocco sullo sfondo scuro: chiude */
+$("#dlg").addEventListener("click",e=>{if(e.target.id==="dlg")$("#dlg").close();});
+
+/* ===== resoconto per Claude ===== */
+function resoconto(){
+  const righe=[];const L=u=>`- ${plain(u.artista)} — ${plain(u.titolo)} (${[TIPI[u.tipo]||u.tipo,u.genere].filter(Boolean).join(", ")})`;
+  const withNote=(u,s)=>L(u)+(s.nota?` · nota: "${s.nota.replace(/\s+/g," ").trim()}"`:"");
+  const last=ultimoGiro();const lg=delGiro(last);
+  const asc=U.filter(u=>seg(u).ascoltata);
+  righe.push(`RADAR · resoconto per Claude · ${dataLunga(ymd())}`);
+  righe.push(`Ultimo giro: ${last?dataLunga(last):"—"} (${lg.length} uscite, ${lg.filter(u=>!seg(u).ascoltata).length} ancora da ascoltare)`);
+  righe.push(`In tutto: ${U.length} uscite · ${asc.length} ascoltate · ${U.filter(u=>seg(u).voto==="preferita").length} preferite · ${U.filter(u=>seg(u).voto==="studiare").length} da studiare · ${U.filter(u=>seg(u).voto==="non-in-target").length} non fanno per me`);
+  const blocco=(tit,list,fn)=>{if(!list.length)return;righe.push("",tit);list.forEach(u=>righe.push(fn(u,seg(u))));};
+  const byAgg=(a,b)=>String(seg(b).agg||"").localeCompare(String(seg(a).agg||""));
+  blocco("PREFERITE",U.filter(u=>seg(u).voto==="preferita").sort(byAgg),withNote);
+  blocco("DA STUDIARE",U.filter(u=>seg(u).voto==="studiare").sort(byAgg),withNote);
+  blocco("NON FANNO PER ME",U.filter(u=>seg(u).voto==="non-in-target").sort(byAgg),withNote);
+  blocco("ASCOLTATE SENZA VOTO",asc.filter(u=>!seg(u).voto).sort(byAgg),withNote);
+  blocco("NOTE SU USCITE NON ANCORA ASCOLTATE",U.filter(u=>!seg(u).ascoltata&&seg(u).nota).sort(byAgg),withNote);
+  blocco("HALL OF FAME",U.filter(u=>seg(u).hof),(u,s)=>L(u)+(s.hofNota?` · "${s.hofNota}"`:""));
+  const tg={};U.filter(u=>seg(u).voto==="preferita").forEach(u=>(u.tags||[]).forEach(t=>tg[t]=(tg[t]||0)+1));
+  if(Object.keys(tg).length)righe.push("","GENERI DELLE PREFERITE: "+Object.entries(tg).sort((a,b)=>b[1]-a[1]).map(([t,c])=>`${TAGS[t]||t} ${c}`).join(" · "));
+  return righe.join("\n");
+}
+async function copia(){
+  const t=resoconto();
+  try{await navigator.clipboard.writeText(t);toast("Copiato: incollalo in chat");}
+  catch(e){
+    const dlg=$("#dlg");ui.open=null;
+    dlg.innerHTML=`<div class="frm"><h2>Resoconto</h2><p class="small">Non riesco a copiarlo da sola: tieni premuto sul testo, «Seleziona tutto», poi «Copia».</p><pre class="copy">${esc(t)}</pre><button class="btn wide" data-act="close">Chiudi</button></div>`;
+    if(!dlg.open)dlg.showModal();
+  }
+}
+
+/* ===== importazione dal vecchio Music Radar ===== */
+let pacco=null;
+$("#file").addEventListener("change",async e=>{
+  const f=e.target.files[0];e.target.value="";if(!f)return;
+  try{pacco=JSON.parse(await f.text());}catch(err){toast("Questo file non si legge");return;}
+  const st=pacco&&pacco.chiavi&&pacco.chiavi["musicRadar.releaseState"];
+  if(!st||typeof st!=="object"){toast("Non è il file dei segni di Music Radar");pacco=null;return;}
+  const ids=Object.keys(st);const inApp=ids.filter(id=>byId.has(id)).length;const gia=ids.filter(id=>S.segni[id]).length;
+  const c=pacco.conteggi||{};
+  const dlg=$("#dlg");ui.open=null;
+  dlg.innerHTML=`<div class="frm"><h2>Importa i segni</h2>
+    <p class="small">Nel file: <b>${ids.length}</b> uscite con segni${c.ascoltate!=null?` (${c.ascoltate} ascoltate, ${c.voti} con voto, ${c.note} con note, ${c.hallOfFame} in Hall of Fame)`:""}.</p>
+    <p class="small">${inApp} corrispondono a uscite di RADAR.${ids.length-inApp?` Le altre ${ids.length-inApp} sono di uscite non più in elenco: le conservo comunque nel database.`:""}${gia?` ${gia} hanno già segni qui: li unisco, senza cancellare niente.`:""}</p>
+    <p class="small mute">Salvo anche una copia intera del file nel database, per sicurezza.</p>
+    <div class="row"><button class="btn" data-act="close">Annulla</button><button class="btn full" data-act="importaOk">Importa</button></div></div>`;
+  if(!dlg.open)dlg.showModal();
+});
+function unisci(a,b){a=(a||"").trim();b=(b||"").trim();if(!a)return b;if(!b||a===b||a.includes(b))return a;return a+"\n"+b;}
+async function importaOk(){
+  if(!pacco)return;
+  const st=pacco.chiavi["musicRadar.releaseState"];const now=new Date().toISOString();let n=0;
+  for(const [id,o0] of Object.entries(st)){
+    let o=o0||{};
+    /* schema ancora più vecchio (status unico) */
+    if("status" in o&&!("listened" in o))o={listened:o.status!=="pending",rating:["preferita","non-in-target","studiare"].includes(o.status)?o.status:"",note:o.note||"",saved:!!o.saved,topNote:o.topNote||""};
+    /* si unisce solo con i segni già dati in RADAR: la Hall of Fame preimpostata da Theo il vecchio file la conteneva già,
+       e la tua nota lì dentro sostituisce la frase automatica invece di aggiungersi */
+    const e=S.segni[id]||{};
+    const d={ascoltata:!!(e.ascoltata||o.listened),voto:e.voto||o.rating||"",nota:unisci(e.nota,o.note),hof:!!(e.hof||o.saved),hofNota:unisci(e.hofNota,o.topNote),
+      importato:pacco.esportato||now,agg:now};
+    if(e.quando)d.quando=e.quando;
+    await Store.doc("radar_segni/"+id).set(d);n++;
+  }
+  const key="_import-"+now.replace(/[:.]/g,"-");
+  await Store.doc("radar_segni/"+key).set({tipo:"import",quando:now,conteggi:{importati:n},file:pacco});
+  pacco=null;$("#dlg").close();toast(n+" uscite importate");render();
+}
+
+/* ===== disegno ===== */
+function render(){
+  if(!dataReady||!booted)return;
+  const tabs=[["novita","Novità"],["archivio","Archivio"],["hof","Hall of Fame"],["bussola","Bussola"]];
+  const nv=nonVisto();
+  $("#tabs").hidden=false;
+  $("#tabs").innerHTML=tabs.map(([k,l],i)=>`<button class="${ui.tab===k?"on":""}" data-act="tab" data-t="${k}"><sup>${pad(i+1)}</sup>${l}${k==="novita"&&nv&&ui.tab!=="novita"?'<span class="liv"></span>':""}</button>`).join("");
+  const a=document.activeElement,qFocus=a&&a.id==="q",pos=qFocus?a.selectionStart:0;
+  $("#main").innerHTML=ui.tab==="archivio"?vArchivio():ui.tab==="hof"?vHof():ui.tab==="bussola"?vBussola():vNovita();
+  $("#dot").classList.toggle("ping",nonVisto());
+  if(qFocus){const q=$("#q");if(q){q.focus();try{q.setSelectionRange(pos,pos);}catch(e){}}}
+}
+document.addEventListener("click",e=>{
+  const t=e.target.closest("[data-act]");if(!t)return;
+  const act=t.dataset.act;
+  if(act==="play")return; /* il link apre Musica da solo */
+  const u=byId.get(ui.open);
+  if(act==="tab"){ui.tab=t.dataset.t;if(ui.tab!=="novita")ui.giro=null;saveLS("tab",ui.tab);render();window.scrollTo(0,0);}
+  else if(act==="open")openSheet(t.dataset.id);
+  else if(act==="close")$("#dlg").close();
+  else if(act==="giro"){ui.giro=t.dataset.d||null;render();window.scrollTo({top:0,behavior:"smooth"});}
+  else if(act==="fs"){ui.fs=t.dataset.k;render();}
+  else if(act==="ft"){ui.ft=t.dataset.k;render();}
+  else if(act==="asc"&&u){saveSeg(u,{ascoltata:!seg(u).ascoltata});$("#segni").innerHTML=segniHtml(u);}
+  else if(act==="voto"&&u){const v=t.dataset.v;saveSeg(u,{voto:seg(u).voto===v?"":v});$("#segni").innerHTML=segniHtml(u);}
+  else if(act==="hof"&&u){saveSeg(u,{hof:!seg(u).hof});$("#segni").innerHTML=segniHtml(u);}
+  else if(act==="copia")copia();
+  else if(act==="importa")$("#file").click();
+  else if(act==="importaOk")importaOk();
+  else if(act==="esci"){if(confirm("Uscire da RADAR su questo dispositivo?"))Store.signOut().then(()=>location.reload());}
+});
+document.addEventListener("input",e=>{if(e.target.id==="q"){ui.q=e.target.value;render();}});
+
+/* ===== avvio ===== */
+async function loadData(){
+  try{
+    const [a,b]=await Promise.all([fetch("uscite.json",{cache:"no-cache"}).then(r=>r.json()),fetch("bussola.json",{cache:"no-cache"}).then(r=>r.json())]);
+    U=a.uscite||[];G=a.giri||[];AGG=a.aggiornato||"";B=b;byId=new Map(U.map(u=>[u.id,u]));dataReady=true;render();
+  }catch(e){$("#main").innerHTML=`<section class="login"><h1>Non carico le uscite</h1><p>Serve la rete almeno la prima volta. Riprova tra poco.</p></section>`;}
+}
+Store.onStatus(st=>{const el=$("#sync");el.className=st.error||!st.online?"warn":"";
+  el.lastChild.textContent=st.demo?"prova":!st.online?"offline":st.error?"non sincronizzato":st.pending?st.pending+" da inviare":"sincronizzato";
+  if(st.error&&/relation|does not exist|schema cache/i.test(st.error))$("#main").innerHTML=`<section class="login"><h1>Manca il database</h1><p>La tabella di RADAR non c'è ancora su Supabase. Esegui lo script <b>supabase/01-tabelle.sql</b> nell'SQL Editor, poi ricarica.</p></section>`;});
+function subscribe(){
+  Store.collection("radar_segni").onSnapshot(s=>{
+    const seg={},imp=[];
+    s.docs.forEach(d=>{if(d.id.startsWith("_")){const x=d.data();if(x&&x.tipo==="import")imp.push({quando:x.quando,conteggi:x.conteggi});}else seg[d.id]=d.data();});
+    S.segni=seg;S.imports=imp;render();
+  });
+}
+Store.onPulled(()=>{booted=true;render();});
+function loginView(){
+  $("#tabs").hidden=true;
+  $("#main").innerHTML=`<section class="login"><h1>Entra in<br>RADAR</h1><p class="mute" style="margin-top:10px">Stessa email e password di ENLIST, TRAIN e PRACTICE. Lo fai una volta sola su ogni dispositivo.</p>
+    <form id="lf"><input type="email" name="email" autocomplete="username" placeholder="Email" required><input type="password" name="pass" autocomplete="current-password" placeholder="Password" required>
+    <button class="btn full" style="min-height:52px">Entra</button><p id="lerr" class="mute"></p></form></section>`;
+  $("#lf").onsubmit=async e=>{e.preventDefault();const f=e.target;$("#lerr").textContent="Accesso…";
+    try{await Store.signIn(f.email.value.trim(),f.pass.value);go();}catch(err){$("#lerr").textContent="Non entra: "+(err.message||err);}};
+}
+function go(){$("#main").innerHTML=`<section><p class="mute">Carico…</p></section>`;subscribe();Store.start();loadData();}
+if(Store.DEMO)window.DEMO_SEED=demoSeed();
+function demoSeed(){
+  /* modalità prova (?demo): qualche segno inventato, solo in questo browser */
+  const t=new Date().toISOString();
+  return {radar_segni:{
+    "20261016-giorgia":{ascoltata:true,voto:"preferita",nota:"La voce sul secondo inedito: respiri lasciati dentro, da rubare.",hof:false,hofNota:"",quando:ymd(),agg:t},
+    "20261016-michael-kiwanuka":{ascoltata:true,voto:"studiare",nota:"",hof:false,hofNota:"",quando:ymd(),agg:t},
+    "20261016-rachel-chinouriri":{ascoltata:false,voto:"",nota:"Sentire i crediti di APOB",hof:false,hofNota:"",agg:t}}};
+}
+(async()=>{if(await Store.session())go();else loginView();})();
+if("serviceWorker" in navigator&&!Store.DEMO&&location.protocol==="https:")navigator.serviceWorker.register("sw.js");
+</script>
+</body></html>
