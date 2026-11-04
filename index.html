@@ -272,8 +272,12 @@ function saveSeg(u,patch){
   if(patch.ascoltata&&!cur.ascoltata)d.quando=ymd();
   Store.doc("radar_segni/"+u.id).set(d);
 }
-const giriVeri=()=>G.filter(g=>!g.archivio).sort((a,b)=>b.data.localeCompare(a.data));
-const ultimoGiro=()=>(giriVeri()[0]||{}).data;
+/* ogni giro ha un codice (id, oppure la data se non ce l'ha): così due giri possono stare nello stesso giorno.
+   Ordine: dal più recente; a parità di data, prima quello aggiunto per ultimo (in cima al file) */
+const gk=g=>g.id||g.data;
+const giroDi=k=>G.find(x=>gk(x)===k);
+const giriVeri=()=>G.map((g,i)=>[g,i]).filter(([g])=>!g.archivio).sort((a,b)=>b[0].data.localeCompare(a[0].data)||a[1]-b[1]).map(([g])=>g);
+const ultimoGiro=()=>{const g=giriVeri()[0];return g?gk(g):undefined;};
 const delGiro=d=>U.filter(u=>u.giro===d);
 /* un giro con un ordine suo (es. una playlist di reference) resta in quell'ordine; gli altri: top, chicche, poi le più recenti */
 const ordina=list=>list.slice().sort((a,b)=>(a.ord!=null&&b.ord!=null)?a.ord-b.ord:(b.top-a.top)||(b.chicca-a.chicca)||b.data.localeCompare(a.data));
@@ -325,10 +329,10 @@ function rowItem(u){
 /* ===== schermate ===== */
 function vNovita(){
   const last=ultimoGiro();if(!last)return `<section><p class="empty">Nessun giro ancora.</p></section>`;
-  const gd=ui.giro||last;const g=G.find(x=>x.data===gd)||{data:gd,titolo:""};
+  const gd=ui.giro||last;const g=giroDi(gd)||{data:gd,titolo:""};
   const list=ordina(delGiro(gd));const left=list.filter(u=>!seg(u).ascoltata).length;const fatto=list.length-left;
   if(gd===last)saveLS("visto",last);
-  const d=parseD(gd);
+  const d=parseD(g.data);
   let h=`<section class="flush"><div class="dh">
     <div class="cap">${gd===last?"Ultimo giro":"Giro del"}</div>
     <div class="heavy n">${d.getDate()}</div>
@@ -339,14 +343,14 @@ function vNovita(){
   </div>${gd!==last?`<button class="link" data-act="giro" data-d="">← Torna all'ultimo giro</button>`:""}</section>
   <section class="flush" style="padding-top:4px">${list.map(card).join("")}</section>`;
   if(gd===last){
-    const prev=giriVeri().slice(1).map(x=>x.data);
+    const prev=giriVeri().slice(1).map(gk);
     const indietro=U.filter(u=>prev.includes(u.giro)&&u.top&&!seg(u).ascoltata&&!seg(u).voto).sort((a,b)=>b.giro.localeCompare(a.giro)||b.data.localeCompare(a.data));
     if(indietro.length)h+=`<section><h2>Rimasti indietro</h2><p class="small mute">Le uscite top dei giri passati che non hai ancora sentito.</p>
       <div>${indietro.slice(0,6).map(rowItem).join("")}</div>${indietro.length>6?`<p class="count">E altre ${indietro.length-6} nell'Archivio, filtro «Top» + «Da ascoltare».</p>`:""}</section>`;
   }
   const gl=giriVeri();
-  h+=`<section><h2>I giri</h2><ul class="nl">${gl.map((x,i)=>{const l=delGiro(x.data);const da=l.filter(u=>!seg(u).ascoltata).length;
-    return `<li class="${x.data===gd?"on":""}"><button data-act="giro" data-d="${x.data}"><sup>${pad(gl.length-i)}</sup><span class="nm">${dataCorta(x.data)}</span><span class="mn">${l.length}</span><span class="f">${esc(x.titolo||"")}${da?` · ${da} da ascoltare`:" · tutto ascoltato"}</span></button></li>`;}).join("")}</ul></section>`;
+  h+=`<section><h2>I giri</h2><ul class="nl">${gl.map((x,i)=>{const l=delGiro(gk(x));const da=l.filter(u=>!seg(u).ascoltata).length;
+    return `<li class="${gk(x)===gd?"on":""}"><button data-act="giro" data-d="${gk(x)}"><sup>${pad(gl.length-i)}</sup><span class="nm">${dataCorta(x.data)}</span><span class="mn">${l.length}</span><span class="f">${esc(x.titolo||"")}${da?` · ${da} da ascoltare`:" · tutto ascoltato"}</span></button></li>`;}).join("")}</ul></section>`;
   return h;
 }
 
@@ -433,7 +437,7 @@ function segniHtml(u){
 }
 function openSheet(id){
   const u=byId.get(id);if(!u)return;ui.open=id;
-  const s=seg(u);const g=G.find(x=>x.data===u.giro);
+  const s=seg(u);const g=giroDi(u.giro);
   const dlg=$("#dlg");
   dlg.innerHTML=`<div class="frm sh" tabindex="-1" autofocus>
     <div class="cvw">${cover(u,"l",600)}</div>
@@ -481,7 +485,7 @@ function resoconto(){
   const last=ultimoGiro();const lg=delGiro(last);
   const asc=U.filter(u=>seg(u).ascoltata);
   righe.push(`RADAR · resoconto per Claude · ${dataLunga(ymd())}`);
-  righe.push(`Ultimo giro: ${last?dataLunga(last):"—"} (${lg.length} uscite, ${lg.filter(u=>!seg(u).ascoltata).length} ancora da ascoltare)`);
+  const lgg=giroDi(last);righe.push(`Ultimo giro: ${lgg?dataLunga(lgg.data)+" · "+lgg.titolo:"—"} (${lg.length} uscite, ${lg.filter(u=>!seg(u).ascoltata).length} ancora da ascoltare)`);
   righe.push(`In tutto: ${U.length} uscite · ${asc.length} ascoltate · ${U.filter(u=>seg(u).voto==="preferita").length} preferite · ${U.filter(u=>seg(u).voto==="studiare").length} da studiare · ${U.filter(u=>seg(u).voto==="non-in-target").length} non fanno per me`);
   const blocco=(tit,list,fn)=>{if(!list.length)return;righe.push("",tit);list.forEach(u=>righe.push(fn(u,seg(u))));};
   const byAgg=(a,b)=>String(seg(b).agg||"").localeCompare(String(seg(a).agg||""));

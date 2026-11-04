@@ -2,6 +2,12 @@
  "aggiornato": "2026-11-04",
  "giri": [
   {
+   "id": "2026-11-04-uscite",
+   "data": "2026-11-04",
+   "titolo": "Fine ottobre, recuperi e il 6 novembre",
+   "nota": "Il venerdì del 30 ottobre, tre recuperi di ottobre dalle liste di fine mese (Karen y Los Remedios, Josh Johnson, il duetto Fontaines D.C. e Rosalía), il nuovo singolo di Margherita Vicario e due dischi in arrivo venerdì 6 novembre. Calibrato sui tuoi segni: jazz suonato con la pista da ballo dentro (Moses Boyd, Makaya McCraven), chitarra brasiliana (Joyce Moreno), arrangiamenti (Miguel Atwood-Ferguson), un live (Phoebe Bridgers) e club-pop vicino alla reference della session (Shygirl). <strong>Jordan Rakei</strong> è uscito il 30: è già nel giro del 25 ottobre."
+  },
+  {
    "data": "2026-11-04",
    "titolo": "Reference per la session",
    "nota": "I tre dischi che mi hai segnalato e i 49 brani della playlist di reference, nell'ordine della playlist. Le zone: <strong>club-pop e hyperpop</strong> · <strong>pop su ritmi UK garage</strong> · <strong>alt-pop elettronico scuro</strong> · <strong>R&B ed elettronica morbida</strong> · <strong>art-pop sperimentale</strong> · <strong>elettronica strumentale e texture</strong>. Nella scheda di ogni brano trovi la zona e cosa ascoltare."
@@ -61,6 +67,364 @@
   }
  ],
  "uscite": [
+  {
+   "id": "20261030-moses-boyd",
+   "data": "2026-10-30",
+   "artista": "Moses Boyd",
+   "titolo": "Songs for Sinners",
+   "tipo": "album",
+   "genere": "Jazz / gospel / dance UK",
+   "provenienza": "UK (Londra)",
+   "label": "Exodus Records",
+   "fonte": "NPR New Music Friday 30 ott (Starting 5) · Treble, best of October · Clash",
+   "crediti": "<strong>Ospiti:</strong> Raelle, Shantéh, Amber Simone · coro della sua famiglia registrato in casa · <strong>Brano da cui partire:</strong> «I Surrender»",
+   "perche": "<strong>Batterista e produttore della scena jazz londinese</strong>, la stessa di Ezra Collective che hai segnato preferita. Secondo disco solista, il primo in sei anni: gospel, jazz e pista da ballo insieme, con il peso dei bassi da sound system. Per Clash è il suo disco più pop.",
+   "top": true,
+   "chicca": false,
+   "tags": [
+    "jazz",
+    "rnb",
+    "elettronica"
+   ],
+   "giro": "2026-11-04-uscite",
+   "cover": "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/79/f9/40/79f9408f-0954-9da2-96eb-1b2432203347/820233948364.jpg/100x100bb.jpg",
+   "apple": "https://music.apple.com/it/album/precious/6789627970?i=6789627979",
+   "artistaUrl": "https://music.apple.com/it/artist/moses-boyd/1067848788"
+  },
+  {
+   "id": "20261030-makaya-mccraven",
+   "data": "2026-10-30",
+   "artista": "Makaya McCraven",
+   "titolo": "Off the Record",
+   "tipo": "album",
+   "genere": "Jazz / beat",
+   "provenienza": "USA (Chicago)",
+   "label": "International Anthem",
+   "fonte": "#NewMusicFriday 30 ott (Twittering Machines)",
+   "crediti": "",
+   "perche": "<strong>Batterista-produttore di Chicago</strong> che registra jam dal vivo e poi le rimonta in studio come un produttore hip-hop: il ponte tra il suonato e la produzione, cioè il tuo doppio mestiere.",
+   "top": true,
+   "chicca": true,
+   "tags": [
+    "jazz"
+   ],
+   "giro": "2026-11-04-uscite",
+   "cover": "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/d0/ad/5b/d0ad5b83-8d9e-652e-4eea-f10c814ed25d/191404170175.png/100x100bb.jpg",
+   "apple": "https://music.apple.com/it/album/off-the-record/6820434045",
+   "artistaUrl": "https://music.apple.com/it/artist/makaya-mccraven/321718536"
+  },
+  {
+   "id": "20261030-joyce-moreno",
+   "data": "2026-10-30",
+   "artista": "Joyce Moreno",
+   "titolo": "Never Too Soon",
+   "tipo": "album",
+   "genere": "MPB / bossa / jazz brasiliano",
+   "provenienza": "Brasile (Rio de Janeiro)",
+   "label": "Far Out Recordings",
+   "fonte": "NPR New Music Friday 30 ott (lightning round) · #NewMusicFriday",
+   "crediti": "",
+   "perche": "<strong>Cantante e chitarrista brasiliana leggendaria</strong>, dalla MPB alla bossa al jazz. Da ascoltare con la chitarra in mano: armonie e mano destra.",
+   "top": false,
+   "chicca": true,
+   "tags": [
+    "jazz"
+   ],
+   "giro": "2026-11-04-uscite",
+   "cover": "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/f7/7b/58/f77b584c-8ba5-1e92-76ac-491f502d3f54/cover.jpg/100x100bb.jpg",
+   "apple": "https://music.apple.com/it/album/never-too-soon/6799953352",
+   "artistaUrl": "https://music.apple.com/it/artist/joyce-moreno/330763581"
+  },
+  {
+   "id": "20261030-miguel-atwood-ferguson",
+   "data": "2026-10-30",
+   "artista": "Miguel Atwood-Ferguson",
+   "titolo": "Ananta: Spirit of Coltrane",
+   "tipo": "album",
+   "genere": "Jazz orchestrale",
+   "provenienza": "USA (Los Angeles)",
+   "label": "Verve",
+   "fonte": "#NewMusicFriday 30 ott (Twittering Machines)",
+   "crediti": "",
+   "perche": "<strong>Arrangiatore e polistrumentista di Los Angeles</strong>, quello delle orchestrazioni di J Dilla (<em>Suite for Ma Dukes</em>). Qui rilegge Coltrane: da ascoltare per gli arrangiamenti, archi e fiati.",
+   "top": false,
+   "chicca": true,
+   "tags": [
+    "jazz"
+   ],
+   "giro": "2026-11-04-uscite",
+   "cover": "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/c9/36/c3/c936c33a-3e0f-c298-366c-a81d711faf83/26UM1IM13097.rgb.jpg/100x100bb.jpg",
+   "apple": "https://music.apple.com/it/album/ananta-spirit-of-coltrane/6808674592",
+   "artistaUrl": "https://music.apple.com/it/artist/miguel-atwood-ferguson/25507911"
+  },
+  {
+   "id": "20261030-phoebe-bridgers",
+   "data": "2026-10-30",
+   "artista": "Phoebe Bridgers",
+   "titolo": "Live at Madison Square Garden",
+   "tipo": "live",
+   "genere": "Indie / live",
+   "provenienza": "USA (Los Angeles)",
+   "label": "Esclusiva Tidal",
+   "fonte": "Spin · #NewMusicFriday 30 ott",
+   "crediti": "<strong>5 brani dal vivo</strong> dal concerto del 4 giugno 2026 al Madison Square Garden (biglietti a 1 dollaro, show senza telefoni), dal suo album <em>Lost Weekend</em>",
+   "perche": "<strong>Per il focus sugli arrangiamenti live.</strong> Attenzione: è un'esclusiva Tidal, su Apple Music non c'è. Il pulsante cerca i video.",
+   "top": false,
+   "chicca": false,
+   "tags": [
+    "indie"
+   ],
+   "giro": "2026-11-04-uscite",
+   "artistaUrl": "https://music.apple.com/it/artist/phoebe-bridgers/697833299"
+  },
+  {
+   "id": "20261030-dominic-fike",
+   "data": "2026-10-30",
+   "artista": "Dominic Fike",
+   "titolo": "How To Quit Smoking",
+   "tipo": "album",
+   "genere": "Alt-pop / chitarre",
+   "provenienza": "USA",
+   "label": "",
+   "fonte": "DraftKings release radar 30 ott",
+   "crediti": "",
+   "perche": "<strong>Il disco più ascoltato del venerdì.</strong> Pop alternativo con la chitarra al centro e melodie storte ma cantabili.",
+   "top": false,
+   "chicca": false,
+   "tags": [
+    "pop",
+    "indie"
+   ],
+   "giro": "2026-11-04-uscite",
+   "cover": "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/81/24/65/812465c4-b20f-af62-4303-59a120c4199f/196874725467.jpg/100x100bb.jpg",
+   "apple": "https://music.apple.com/it/album/casting-call/6805707169?i=6805707173",
+   "artistaUrl": "https://music.apple.com/it/artist/dominic-fike/1104179033"
+  },
+  {
+   "id": "20261030-andy-stott",
+   "data": "2026-10-30",
+   "artista": "Andy Stott",
+   "titolo": "Late Loop",
+   "tipo": "album",
+   "genere": "Elettronica / trip-hop",
+   "provenienza": "UK (Manchester)",
+   "label": "Modern Love",
+   "fonte": "Treble, best of October · #NewMusicFriday",
+   "crediti": "<strong>Voce:</strong> Alison Skidmore",
+   "perche": "<strong>Primo vero album in cinque anni</strong>: trip-hop e synth minimali, più vicino alla forma canzone del solito. Utile anche come texture per la session.",
+   "top": false,
+   "chicca": true,
+   "tags": [
+    "elettronica"
+   ],
+   "giro": "2026-11-04-uscite",
+   "cover": "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/f8/32/aa/f832aa4d-f909-daac-947c-0ceae0c369ad/5060165488810.jpg/100x100bb.jpg",
+   "apple": "https://music.apple.com/it/album/late-loop/6805585492",
+   "artistaUrl": "https://music.apple.com/it/artist/andy-stott/282665089"
+  },
+  {
+   "id": "20261009-karen-y-los-remedios",
+   "data": "2026-10-09",
+   "artista": "Karen y Los Remedios",
+   "titolo": "Bestiaria",
+   "tipo": "album",
+   "genere": "Cumbia / downtempo noir",
+   "provenienza": "Messico (Città del Messico)",
+   "label": "ZZK",
+   "fonte": "Treble, best of October",
+   "crediti": "",
+   "perche": "<strong>Cumbia e downtempo notturno</strong> da Città del Messico, con tocchi alla Portishead e Massive Attack. Una scoperta fuori dai soliti giri.",
+   "top": false,
+   "chicca": true,
+   "tags": [
+    "elettronica"
+   ],
+   "giro": "2026-11-04-uscite",
+   "cover": "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/83/f9/58/83f958d9-2241-ac86-23ac-5340c148895e/66970.jpg/100x100bb.jpg",
+   "apple": "https://music.apple.com/it/album/bestiaria/6784291843",
+   "artistaUrl": "https://music.apple.com/it/artist/karen-y-los-remedios/1507459143"
+  },
+  {
+   "id": "20261023-josh-johnson",
+   "data": "2026-10-23",
+   "artista": "Josh Johnson",
+   "titolo": "Animative",
+   "tipo": "album",
+   "genere": "Jazz / elettronica",
+   "provenienza": "USA",
+   "label": "International Anthem",
+   "fonte": "Treble, best of October",
+   "crediti": "",
+   "perche": "<strong>Sassofono solo stratificato su loop e campioni</strong>: jazz che incontra l'elettronica. Per come si costruisce un brano a strati partendo da uno strumento.",
+   "top": false,
+   "chicca": true,
+   "tags": [
+    "jazz",
+    "elettronica"
+   ],
+   "giro": "2026-11-04-uscite",
+   "cover": "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/92/ce/03/92ce03a3-a95a-c73a-1d6d-436ac4b239fc/760944511498.png/100x100bb.jpg",
+   "apple": "https://music.apple.com/it/album/animative/6795584360",
+   "artistaUrl": "https://music.apple.com/it/artist/josh-johnson/1410971009"
+  },
+  {
+   "id": "20261030-sampa-the-great",
+   "data": "2026-10-30",
+   "artista": "Sampa the Great",
+   "titolo": "Nu Zamrock",
+   "tipo": "album",
+   "genere": "Hip-hop / zamrock",
+   "provenienza": "Zambia / Australia",
+   "label": "Loma Vista",
+   "fonte": "NPR New Music Friday 30 ott (Starting 5)",
+   "crediti": "",
+   "perche": "<strong>Rapper zambiana cresciuta in Australia.</strong> Il titolo rimanda allo zamrock, il rock zambiano degli anni '70: band suonata e groove.",
+   "top": false,
+   "chicca": false,
+   "tags": [
+    "rnb"
+   ],
+   "giro": "2026-11-04-uscite",
+   "cover": "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/4b/16/d7/4b16d7ca-dbe3-9598-a82e-7a5f4d21d5f1/26CRGIM55873.rgb.jpg/100x100bb.jpg",
+   "apple": "https://music.apple.com/it/album/nu-zamrock/6800037021",
+   "artistaUrl": "https://music.apple.com/it/artist/sampa-the-great/1026842498"
+  },
+  {
+   "id": "20261030-francesca-michielin",
+   "data": "2026-10-30",
+   "artista": "Francesca Michielin",
+   "titolo": "Magia bianca, Magia nera",
+   "tipo": "album",
+   "genere": "Pop italiano / dance-rock",
+   "provenienza": "Italia",
+   "label": "",
+   "fonte": "Sorrisi, guida della settimana 27 ott",
+   "crediti": "<strong>Novità:</strong> sei inediti aggiunti a <em>Magia bianca</em>",
+   "perche": "<strong>Pop italiano curato</strong>: i sei inediti vanno tra sonorità gotiche e dance-rock.",
+   "top": false,
+   "chicca": false,
+   "tags": [
+    "italia",
+    "pop"
+   ],
+   "giro": "2026-11-04-uscite",
+   "cover": "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/19/73/ce/1973ce93-45d1-e3ad-49ec-943dda9cde68/196874761038.jpg/100x100bb.jpg",
+   "apple": "https://music.apple.com/it/album/magia-bianca-magia-nera/6819650506",
+   "artistaUrl": "https://music.apple.com/it/artist/francesca-michielin/492678126"
+  },
+  {
+   "id": "20261023-margherita-vicario",
+   "data": "2026-10-23",
+   "artista": "Margherita Vicario",
+   "titolo": "La persona che più mi odia",
+   "tipo": "singolo",
+   "genere": "Pop italiano / cantautorato",
+   "provenienza": "Italia (Roma)",
+   "label": "",
+   "fonte": "Sorrisi, guida della settimana 27 ott",
+   "crediti": "<strong>Album in arrivo:</strong> 20 novembre",
+   "perche": "<strong>È nella tua scansione permanente</strong> (scena italiana dei festival). Singolo sull'autosabotaggio, anticipa l'album del 20 novembre.",
+   "top": true,
+   "chicca": false,
+   "tags": [
+    "italia",
+    "pop"
+   ],
+   "giro": "2026-11-04-uscite",
+   "cover": "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/7a/45/fb/7a45fb67-d7cc-e39d-c54c-2c0def9c9eec/26UM1IM31208.rgb.jpg/100x100bb.jpg",
+   "apple": "https://music.apple.com/it/album/la-persona-che-pi%C3%B9-mi-odia-single/6820498202",
+   "artistaUrl": "https://music.apple.com/it/artist/margherita-vicario/314961136"
+  },
+  {
+   "id": "20261030-gracie-abrams",
+   "data": "2026-10-30",
+   "artista": "Gracie Abrams",
+   "titolo": "Here You Come, There You Go",
+   "tipo": "singolo",
+   "genere": "Pop cantautorale",
+   "provenienza": "USA (Los Angeles)",
+   "label": "",
+   "fonte": "DraftKings release radar 30 ott",
+   "crediti": "",
+   "perche": "<strong>Il singolo più ascoltato del venerdì.</strong> Pop cantautorale intimo.",
+   "top": false,
+   "chicca": false,
+   "tags": [
+    "pop"
+   ],
+   "giro": "2026-11-04-uscite",
+   "cover": "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/10/d4/d3/10d4d3c1-1832-f04c-5883-39fe81ed21fa/26UM1IM32920.rgb.jpg/100x100bb.jpg",
+   "apple": "https://music.apple.com/it/album/here-you-come-there-you-go/6827357170?i=6827357438",
+   "artistaUrl": "https://music.apple.com/it/artist/gracie-abrams/1450554836"
+  },
+  {
+   "id": "20261012-fontaines-d-c-rosalia",
+   "data": "2026-10-12",
+   "artista": "Fontaines D.C. & Rosalía",
+   "titolo": "Where is gone?",
+   "tipo": "brano",
+   "genere": "Post-punk / art-pop",
+   "provenienza": "Irlanda / Spagna",
+   "label": "XL",
+   "fonte": "Sorrisi, guida della settimana 27 ott",
+   "crediti": "Singolo del 12 ottobre, da <em>Dopamine Chamber</em> (16 ottobre), già nel radar",
+   "perche": "<strong>Il duetto con Rosalía</strong> dal disco dei Fontaines D.C. che è già nel radar: un incontro inatteso, da sentire per come convivono due voci così diverse.",
+   "top": false,
+   "chicca": false,
+   "tags": [
+    "indie"
+   ],
+   "giro": "2026-11-04-uscite",
+   "cover": "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/e4/48/48/e44848c3-dd72-8ec0-b0ce-cb0298624edf/191404170939.png/100x100bb.jpg",
+   "apple": "https://music.apple.com/it/album/where-is-gone-single/6815391781",
+   "artistaUrl": "https://music.apple.com/it/artist/fontaines-d-c/1341828470"
+  },
+  {
+   "id": "20261106-shygirl",
+   "data": "2026-11-06",
+   "artista": "Shygirl",
+   "titolo": "Swallow!",
+   "tipo": "album",
+   "genere": "Club-pop UK",
+   "provenienza": "UK (Londra)",
+   "label": "",
+   "fonte": "Beatroute, uscite di novembre",
+   "crediti": "",
+   "perche": "<strong>Esce venerdì 6 novembre.</strong> Lei lo descrive come una reintroduzione, nato in un periodo di innamoramento. Club-pop londinese: la stessa zona della reference della session.",
+   "top": true,
+   "chicca": false,
+   "tags": [
+    "pop",
+    "elettronica"
+   ],
+   "giro": "2026-11-04-uscite",
+   "cover": "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/a7/54/77/a75477a8-1f9f-ffd6-37c5-774c1ceb6cfb/5056556184614_cover.jpg/100x100bb.jpg",
+   "apple": "https://music.apple.com/it/album/lucky-hymn/6795185326?i=6795185355",
+   "artistaUrl": "https://music.apple.com/it/artist/shygirl/456494592"
+  },
+  {
+   "id": "20261106-la-roux",
+   "data": "2026-11-06",
+   "artista": "La Roux",
+   "titolo": "Old Flames",
+   "tipo": "album",
+   "genere": "Synth-pop",
+   "provenienza": "UK (Londra)",
+   "label": "",
+   "fonte": "Beatroute, uscite di novembre",
+   "crediti": "",
+   "perche": "<strong>Esce venerdì 6 novembre.</strong> Elly Jackson torna con il disco più personale da anni: synth-pop dalle melodie anni '80.",
+   "top": false,
+   "chicca": false,
+   "tags": [
+    "pop",
+    "elettronica"
+   ],
+   "giro": "2026-11-04-uscite",
+   "cover": "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/53/26/17/53261760-4064-0469-bc35-1382004806f5/26UMGIM43498.rgb.jpg/100x100bb.jpg",
+   "apple": "https://music.apple.com/it/album/old-flames/1894292696",
+   "artistaUrl": "https://music.apple.com/it/artist/la-roux/292533375"
+  },
   {
    "id": "20260925-tinashe-popstar-2",
    "giro": "2026-11-04",
@@ -3074,10 +3438,10 @@
    "tronco": [
     "titolo"
    ],
+   "titoloDa": "apple",
    "cover": "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/55/4e/e2/554ee22e-8c93-b51e-3dc6-9d3ec514e4a4/184923134865_cover.jpg/100x100bb.jpg",
    "apple": "https://music.apple.com/it/album/i-was-here-for-a-moment-ep/6769915838",
-   "artistaUrl": "https://music.apple.com/it/artist/fauzia/936766664",
-   "titoloDa": "apple"
+   "artistaUrl": "https://music.apple.com/it/artist/fauzia/936766664"
   },
   {
    "id": "20260717-gracie-abrams",
