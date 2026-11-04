@@ -1,6 +1,6 @@
 /* RADAR · service worker: tiene una copia dell'app sul telefono, così si apre anche senza rete (in macchina, in viaggio).
    I segni non passano da qui: li gestisce la pagina. Quando cambia l'app, alzare VERSION. */
-const VERSION="radar-v1";
+const VERSION="radar-v2";
 const CORE=["./","index.html","store.js","uscite.json","bussola.json","manifest.webmanifest","icons/apple-touch-icon.png","icons/icon-192.png","icons/icon-512.png","icons/icon-maskable-512.png"];
 
 self.addEventListener("install",e=>{e.waitUntil(caches.open(VERSION).then(c=>c.addAll(CORE)).then(()=>self.skipWaiting()));});
