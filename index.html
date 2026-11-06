@@ -423,7 +423,8 @@ function vBussola(){
     ${imp?`<p class="small">Segni importati il ${dataLunga(ymd(new Date(imp.quando)))}: ${imp.conteggi?imp.conteggi.importati:"?"} uscite. Il file originale è conservato anche qui dentro, per sicurezza.</p>`
       :`<p class="small">Premi il pulsante e scegli il file <b>music-radar-segni-….json</b> che hai scaricato dal vecchio Music Radar (cartella Download). Non cancella niente: se un'uscita ha già segni qui, li unisce.</p>`}
     <button class="btn wide" data-act="importa">${imp?"Importa di nuovo":"Importa i segni"}</button></section>
-  <section><p class="small mute">Uscite aggiornate al ${AGG?dataLunga(AGG):"—"} · ${U.length} in tutto, ${vivi.length} nel radar e ${U.length-vivi.length} nell'archivio di maggio–giugno.</p>
+  <section><p class="small mute">Uscite aggiornate al ${AGG?dataLunga(AGG):"—"} · ${U.length} in tutto, ${vivi.length} nel radar e ${U.length-vivi.length} nell'archivio di maggio–giugno.<br>App ${APP_V}${ultimoControllo?` · ultimo controllo alle ${pad(ultimoControllo.getHours())}:${pad(ultimoControllo.getMinutes())}`:""}</p>
+    <button class="btn wide" data-act="aggiorna" style="margin-bottom:6px">Controlla aggiornamenti</button>
     ${Store.DEMO?"":`<button class="link" data-act="esci">Esci da RADAR</button>`}</section>`;
 }
 
@@ -574,18 +575,43 @@ document.addEventListener("click",e=>{
   else if(act==="voto"&&u){const v=t.dataset.v;saveSeg(u,{voto:seg(u).voto===v?"":v});$("#segni").innerHTML=segniHtml(u);}
   else if(act==="hof"&&u){saveSeg(u,{hof:!seg(u).hof});$("#segni").innerHTML=segniHtml(u);}
   else if(act==="copia")copia();
+  else if(act==="aggiorna")controlla();
   else if(act==="importa")$("#file").click();
   else if(act==="importaOk")importaOk();
   else if(act==="esci"){if(confirm("Uscire da RADAR su questo dispositivo?"))Store.signOut().then(()=>location.reload());}
 });
 document.addEventListener("input",e=>{if(e.target.id==="q"){ui.q=e.target.value;render();}});
 
-/* ===== avvio ===== */
-async function loadData(){
+/* ===== avvio e aggiornamenti ===== */
+/* versione dell'app: tenerla uguale a VERSION in sw.js */
+const APP_V="v4";
+let firma="",ultimoControllo=null;
+const firmaDi=(a,b)=>[a.aggiornato,(a.uscite||[]).length,(a.giri||[]).map(g=>g.id||g.data).join(","),b.aggiornato].join("|");
+/* Le uscite si ricaricano all'avvio, ogni volta che torni nell'app e ogni 10 minuti (iPhone "risveglia" l'app senza riaprirla:
+   prima si caricavano solo all'avvio e i giri nuovi non comparivano). Restituisce true se è arrivato qualcosa di nuovo. */
+async function loadData(avvisa){
   try{
-    const [a,b]=await Promise.all([fetch("uscite.json",{cache:"no-cache"}).then(r=>r.json()),fetch("bussola.json",{cache:"no-cache"}).then(r=>r.json())]);
+    const t="?t="+Date.now();
+    const [a,b]=await Promise.all([fetch("uscite.json"+t,{cache:"no-cache"}).then(r=>r.json()),fetch("bussola.json"+t,{cache:"no-cache"}).then(r=>r.json())]);
+    ultimoControllo=new Date();
+    const f=firmaDi(a,b);
+    if(f===firma){if(ui.tab==="bussola")render();return false;}
+    const prima=firma;firma=f;
     U=a.uscite||[];G=a.giri||[];AGG=a.aggiornato||"";B=b;byId=new Map(U.map(u=>[u.id,u]));dataReady=true;render();
-  }catch(e){$("#main").innerHTML=`<section class="login"><h1>Non carico le uscite</h1><p>Serve la rete almeno la prima volta. Riprova tra poco.</p></section>`;}
+    if(prima&&avvisa)toast("Arrivate nuove uscite");
+    return !!prima;
+  }catch(e){
+    if(!dataReady)$("#main").innerHTML=`<section class="login"><h1>Non carico le uscite</h1><p>Serve la rete almeno la prima volta. Riprova tra poco.</p></section>`;
+    return false;
+  }
+}
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"&&dataReady){loadData(true);swUpdate();}});
+setInterval(()=>{if(document.visibilityState==="visible"&&dataReady)loadData(true);},10*60*1000);
+async function controlla(){
+  toast("Controllo…");
+  swUpdate();Store.pull();
+  const nuovo=await loadData(false);
+  toast(nuovo?"Arrivate nuove uscite":"È tutto aggiornato");
 }
 Store.onStatus(st=>{const el=$("#sync");el.className=st.error||!st.online?"warn":"";
   el.lastChild.textContent=st.demo?"prova":!st.online?"offline":st.error?"non sincronizzato":st.pending?st.pending+" da inviare":"sincronizzato";
@@ -617,6 +643,18 @@ function demoSeed(){
     "20261016-rachel-chinouriri":{ascoltata:false,voto:"",nota:"Sentire i crediti di APOB",hof:false,hofNota:"",agg:t}}};
 }
 (async()=>{if(await Store.session())go();else loginView();})();
-if("serviceWorker" in navigator&&!Store.DEMO&&location.protocol==="https:")navigator.serviceWorker.register("sw.js");
+/* copia offline e versioni nuove dell'app: quando pubblico una versione nuova il telefono la scarica e la pagina si ricarica da sola
+   (subito, oppure appena chiudi la scheda aperta, così una nota in corso si salva prima) */
+let swReg=null;
+function swUpdate(){if(swReg)swReg.update().catch(()=>{});}
+if("serviceWorker" in navigator&&!Store.DEMO&&location.protocol==="https:"){
+  const avevaVersione=!!navigator.serviceWorker.controller;let ricarica=false;
+  navigator.serviceWorker.register("sw.js").then(r=>{swReg=r;}).catch(()=>{});
+  navigator.serviceWorker.addEventListener("controllerchange",()=>{
+    if(!avevaVersione||ricarica)return;ricarica=true;
+    const vai=()=>location.reload();
+    if($("#dlg").open)$("#dlg").addEventListener("close",vai,{once:true});else vai();
+  });
+}
 </script>
 </body></html>
