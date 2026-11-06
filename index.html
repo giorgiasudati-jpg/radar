@@ -332,7 +332,13 @@ function cover(u,cls,size){
   return `<div class="cv ph ${cls||""}"><span>${esc(ini)}</span></div>`;
 }
 const cleanT=t=>String(t).replace(/\((singolo|single|versione ampliata|EP)\)/gi,"").trim();
-const appleLink=u=>u.apple||"https://music.apple.com/it/search?term="+encodeURIComponent(plain(u.artista)+" "+cleanT(plain(u.titolo)));
+/* Sul Mac un link https://music.apple.com apre il browser; con music:// si apre l'app Musica (v6, 2026-11-06).
+   Su iPhone l'https apre già l'app, quindi lì non cambia niente (l'iPad si presenta come Mac ma ha il touch). */
+const MAC=/^Mac/.test(navigator.platform||"")&&!(navigator.maxTouchPoints>1);
+const musica=h=>MAC?String(h).replace(/^https:\/\/music\.apple\.com\//,"music://music.apple.com/"):h;
+/* i link music:// non aprono una scheda nuova: passano direttamente all'app */
+const dove=h=>/^music:/.test(h)?"":' target="_blank" rel="noopener"';
+const appleLink=u=>musica(u.apple||"https://music.apple.com/it/search?term="+encodeURIComponent(plain(u.artista)+" "+cleanT(plain(u.titolo))));
 const ytLink=u=>"https://www.youtube.com/results?search_query="+encodeURIComponent(plain(u.artista)+" "+plain(u.titolo));
 const futura=u=>u.data>ymd();
 /* "TBD", "n/d" e simili non dicono niente: non si mostrano */
@@ -354,7 +360,7 @@ function card(u){
   return `<article class="fc${u.top?" top":""}${s.ascoltata?" done":""}" data-act="open" data-id="${esc(u.id)}">
     ${cover(u,"",200)}
     <div class="tx"><div class="a">${esc(u.artista)}</div><div class="ti">${esc(u.titolo)}</div><div class="m">${meta(u)}</div><div class="labs">${labels(u,s)}</div></div>
-    <a class="play" data-act="play" href="${esc(appleLink(u))}" target="_blank" rel="noopener" aria-label="Apri in Musica">${ICON.play}</a>
+    <a class="play" data-act="play" href="${esc(appleLink(u))}"${dove(appleLink(u))} aria-label="Apri in Musica">${ICON.play}</a>
     <div class="why">${safe(u.perche)}</div>
   </article>`;
 }
@@ -503,8 +509,8 @@ function openSheet(id){
     <div><div class="a">${esc(u.artista)}</div><h2 class="ti">${esc(u.titolo)}</h2>
       <div class="m">${[u.senzaData?"":futura(u)?"Esce il "+dataLunga(u.data):dataLunga(u.data),TIPI[u.tipo]||u.tipo,u.label,u.provenienza].filter(v=>!vuoto(v)).map(esc).join(" · ")}</div>
       ${u.top||u.chicca?`<div class="row" style="margin-top:10px;gap:5px">${u.top?'<span class="lb top">Top</span>':""}${u.chicca?'<span class="lb chicca">Chicca</span>':""}</div>`:""}</div>
-    <a class="btn full wide" href="${esc(appleLink(u))}" target="_blank" rel="noopener">${ICON.play.replace('viewBox','width="13" height="13" viewBox')} ${u.apple?"Apri in Musica":"Cerca in Musica"}</a>
-    ${u.tipo==="live"||!u.apple?`<div class="row"><a class="btn" href="${esc(ytLink(u))}" target="_blank" rel="noopener">Cerca su YouTube</a>${!u.apple&&u.artistaUrl?`<a class="btn" href="${esc(u.artistaUrl)}" target="_blank" rel="noopener">Pagina artista</a>`:""}</div>`:""}
+    <a class="btn full wide" href="${esc(appleLink(u))}"${dove(appleLink(u))}>${ICON.play.replace('viewBox','width="13" height="13" viewBox')} ${u.apple?"Apri in Musica":"Cerca in Musica"}</a>
+    ${u.tipo==="live"||!u.apple?`<div class="row"><a class="btn" href="${esc(ytLink(u))}" target="_blank" rel="noopener">Cerca su YouTube</a>${!u.apple&&u.artistaUrl?`<a class="btn" href="${esc(musica(u.artistaUrl))}"${dove(musica(u.artistaUrl))}>Pagina artista</a>`:""}</div>`:""}
     <h3>I tuoi segni</h3>
     <div id="segni" style="display:flex;flex-direction:column;gap:10px">${segniHtml(u)}</div>
     <label>Nota<textarea id="nota" placeholder="Cosa ti ha colpito, cosa rubare per JOSS o per lo studio…">${esc(s.nota||"")}</textarea></label>
@@ -644,7 +650,7 @@ document.addEventListener("input",e=>{if(e.target.id==="q"){ui.q=e.target.value;
 
 /* ===== avvio e aggiornamenti ===== */
 /* versione dell'app: tenerla uguale a VERSION in sw.js */
-const APP_V="v5";
+const APP_V="v6";
 let firma="",ultimoControllo=null;
 const firmaDi=(a,b)=>[a.aggiornato,(a.uscite||[]).length,(a.giri||[]).map(g=>g.id||g.data).join(","),b.aggiornato].join("|");
 /* Le uscite si ricaricano all'avvio, ogni volta che torni nell'app e ogni 10 minuti (iPhone "risveglia" l'app senza riaprirla:
