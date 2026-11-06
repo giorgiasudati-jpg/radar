@@ -104,6 +104,15 @@ sup{font-size:10px;font-weight:600;vertical-align:top;position:relative;top:4px;
 .lb.pref{border-color:var(--sig);color:var(--sig)}
 .lb.hof{border-color:var(--ink);background:var(--paper)}
 .lb.fut{border-style:dashed}
+.lb.new{border-color:var(--ink);gap:5px}
+.lb.new i{width:6px;height:6px;border-radius:50%;background:var(--sig);display:inline-block}
+/* cartellina: una raccolta con uno scopo (es. la reference di una session), in cima al faldone */
+.folder{display:grid;grid-template-columns:auto 1fr auto;gap:14px;align-items:center;width:100%;background:var(--ink);color:var(--paper);border:0;border-radius:12px;padding:14px 16px;text-align:left;margin:2px 0 14px;min-height:72px}
+.folder .stk{display:flex;padding-left:12px}
+.folder .stk img{width:42px;height:42px;border-radius:5px;margin-left:-12px;box-shadow:0 0 0 2px var(--ink);object-fit:cover;background:var(--faint)}
+.folder b{font-size:16px;font-weight:700;display:block;line-height:1.2}
+.folder small{display:block;opacity:.7;font-size:13px;margin-top:3px}
+.folder .chev{font-size:26px;font-weight:300;opacity:.8}
 
 /* righe compatte (archivio, rimasti indietro) */
 .rw{display:grid;grid-template-columns:48px 1fr auto;gap:12px;align-items:center;padding:10px 0;border-top:1px solid var(--line);cursor:pointer;width:100%;background:none;border-left:0;border-right:0;border-bottom:0;text-align:left;color:inherit}
@@ -262,7 +271,7 @@ const ICON={play:'<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 1.5v13
 /* ===== stato ===== */
 let U=[],G=[],B=null,AGG="",byId=new Map(),dataReady=false,booted=false;
 const S={segni:{},imports:[]};
-const ui={tab:loadLS("tab")||"novita",giro:null,q:"",fs:"tutte",ft:"",open:null};
+const ui={tab:loadLS("tab")||"novita",racc:null,ff:"",q:"",fs:"tutte",ft:"",open:null};
 
 /* i segni di un'uscita. Le due uscite che Theo aveva già messo in Hall of Fame valgono finché non le cambi tu */
 function seg(u){const s=S.segni[u.id];if(s)return s;return u.hof?{hof:true,hofNota:u.hofNota||"",seed:true}:{};}
@@ -281,7 +290,40 @@ const ultimoGiro=()=>{const g=giriVeri()[0];return g?gk(g):undefined;};
 const delGiro=d=>U.filter(u=>u.giro===d);
 /* un giro con un ordine suo (es. una playlist di reference) resta in quell'ordine; gli altri: top, chicche, poi le più recenti */
 const ordina=list=>list.slice().sort((a,b)=>(a.ord!=null&&b.ord!=null)?a.ord-b.ord:(b.top-a.top)||(b.chicca-a.chicca)||b.data.localeCompare(a.data));
-const nonVisto=()=>{const l=ultimoGiro();return !!l&&(loadLS("visto")||"")<l;};
+/* ===== il faldone (dal 2026-11-06) =====
+   Giorgia non vuole i "giri" come categoria: sono una cosa interna. Le uscite stanno tutte in un faldone unico "Da ascoltare".
+   - Un giro con raccolta:true (es. la reference di una session) diventa una CARTELLINA in cima: ha uno scopo suo.
+   - "Nuova": arrivata da al massimo 7 giorni, oppure arrivata dopo l'ultima volta che hai aperto RADAR.
+   - Dopo SEI settimane le non ascoltate scivolano in Archivio, tranne le top (scelta di Giorgia: niente arretrati che pesano). */
+const SEI=42;
+const giroRacc=g=>!!(g&&g.raccolta);
+const raccolte=()=>giriVeri().filter(giroRacc);
+const inRacc=u=>giroRacc(giroDi(u.giro));
+const arrivo=u=>{const g=giroDi(u.giro);return g?g.data:u.data;};
+const giorniDa=d=>Math.round((parseD(ymd())-parseD(d))/864e5);
+let VISTI=null;
+function caricaVisti(){
+  let v=loadLS("visti");
+  /* prima volta: i giri di più di una settimana fa contano come già visti */
+  if(!v){v=G.filter(g=>giorniDa(g.data)>7).map(gk);saveLS("visti",v);}
+  VISTI=new Set(v);
+}
+function segnaVisti(){if(!G.length)return;const v=new Set(loadLS("visti")||[]);G.forEach(g=>v.add(gk(g)));saveLS("visti",[...v]);}
+/* quando esci dall'app (anche per andare su Musica) i giri presenti contano come visti; al ritorno si rilegge */
+document.addEventListener("visibilitychange",()=>{if(!dataReady)return;if(document.visibilityState==="hidden")segnaVisti();else caricaVisti();});
+const nuova=u=>!seg(u).ascoltata&&(giorniDa(arrivo(u))<=7||!(VISTI&&VISTI.has(u.giro)));
+/* il pallino che pulsa: c'è un arrivo che non hai ancora guardato nel faldone (le etichette "Nuova" invece restano per tutta la visita) */
+const nonVisto=()=>{if(!VISTI)return false;const v=new Set(loadLS("visti")||[]);return G.some(g=>!g.archivio&&!v.has(gk(g)));};
+function nelFaldone(u){
+  if(u.archivio||inRacc(u))return false;
+  const s=seg(u);
+  if(s.ascoltata||s.voto==="non-in-target"||s.hof)return false;
+  if(u.top||s.nota||s.voto==="studiare")return true;
+  return giorniDa(arrivo(u))<=SEI;
+}
+const faldone=()=>U.filter(nelFaldone);
+const FF=[["","Tutto"],["dischi","Dischi"],["brani","Brani"],["live","Live"],["chicca","Chicche"]];
+const passaFF=(u,k)=>!k||(k==="dischi"?(u.tipo==="album"||u.tipo==="ep"):k==="brani"?(u.tipo==="singolo"||u.tipo==="brano"):k==="live"?u.tipo==="live":k==="chicca"?u.chicca:true);
 
 /* ===== pezzi ===== */
 function cover(u,cls,size){
@@ -297,6 +339,7 @@ const futura=u=>u.data>ymd();
 const vuoto=v=>!v||/^(tbd|n\/?d|n\.d\.|—|-|\?)$/i.test(String(v).trim());
 function labels(u,s){
   const l=[];
+  if(VISTI&&nuova(u)&&!inRacc(u))l.push('<span class="lb new"><i></i>Nuova</span>');
   if(u.top)l.push('<span class="lb top">Top</span>');
   if(u.chicca)l.push('<span class="lb chicca">Chicca</span>');
   if(futura(u))l.push(`<span class="lb fut">Esce il ${dataCorta(u.data)}</span>`);
@@ -327,31 +370,46 @@ function rowItem(u){
 }
 
 /* ===== schermate ===== */
-function vNovita(){
-  const last=ultimoGiro();if(!last)return `<section><p class="empty">Nessun giro ancora.</p></section>`;
-  const gd=ui.giro||last;const g=giroDi(gd)||{data:gd,titolo:""};
-  const list=ordina(delGiro(gd));const left=list.filter(u=>!seg(u).ascoltata).length;const fatto=list.length-left;
-  if(gd===last)saveLS("visto",last);
-  const d=parseD(g.data);
-  let h=`<section class="flush"><div class="dh">
-    <div class="cap">${gd===last?"Ultimo giro":"Giro del"}</div>
-    <div class="heavy n">${d.getDate()}</div>
-    <div class="meta"><div><div class="m">${MESI[d.getMonth()]}</div><div class="y">${d.getFullYear()}</div></div><div class="tot">${list.length}<br><span class="mute">uscite</span></div></div>
-    ${g.titolo?`<div class="tit">${esc(g.titolo)}</div>`:""}${g.nota?`<div class="nota small">${safe(g.nota)}</div>`:""}
+function cartellina(g){
+  const l=delGiro(gk(g));const da=l.filter(u=>!seg(u).ascoltata).length;
+  const cov=ordina(l).filter(u=>u.cover).slice(0,3).map(u=>`<img src="${esc(u.cover.replace(/\/\d+x\d+bb\./,"/100x100bb."))}" alt="" loading="lazy" crossorigin="anonymous" referrerpolicy="no-referrer">`).join("");
+  return `<button class="folder" data-act="racc" data-k="${esc(gk(g))}"><span class="stk">${cov}</span>
+    <span><b>${esc(g.titolo||"Cartellina")}</b><small>${l.length} ascolti · ${da?da+" da ascoltare":"tutto ascoltato"}</small></span><span class="chev">›</span></button>`;
+}
+function vRaccolta(k){
+  const g=giroDi(k);if(!g){ui.racc=null;return vFaldone();}
+  const list=ordina(delGiro(k));const left=list.filter(u=>!seg(u).ascoltata).length;const fatto=list.length-left;
+  return `<section class="flush"><button class="link" data-act="racc" data-k="">← Da ascoltare</button>
+    <div class="dh" style="padding-top:6px"><div class="cap">Cartellina</div><h1 style="margin-top:8px;font-size:34px">${esc(g.titolo||"")}</h1>
+    ${g.nota?`<div class="nota small" style="margin-top:14px">${safe(g.nota)}</div>`:""}
     <div class="prog"><i style="width:${list.length?Math.round(fatto/list.length*100):0}%"></i></div>
-    <div class="progl"><span><b>${left}</b> da ascoltare</span><span>${fatto} ascoltate</span></div>
-  </div>${gd!==last?`<button class="link" data-act="giro" data-d="">← Torna all'ultimo giro</button>`:""}</section>
+    <div class="progl"><span><b>${left}</b> da ascoltare</span><span>${fatto} ascoltati</span></div></div></section>
   <section class="flush" style="padding-top:4px">${list.map(card).join("")}</section>`;
-  if(gd===last){
-    const prev=giriVeri().slice(1).map(gk);
-    const indietro=U.filter(u=>prev.includes(u.giro)&&u.top&&!seg(u).ascoltata&&!seg(u).voto).sort((a,b)=>b.giro.localeCompare(a.giro)||b.data.localeCompare(a.data));
-    if(indietro.length)h+=`<section><h2>Rimasti indietro</h2><p class="small mute">Le uscite top dei giri passati che non hai ancora sentito.</p>
-      <div>${indietro.slice(0,6).map(rowItem).join("")}</div>${indietro.length>6?`<p class="count">E altre ${indietro.length-6} nell'Archivio, filtro «Top» + «Da ascoltare».</p>`:""}</section>`;
-  }
-  const gl=giriVeri();
-  h+=`<section><h2>I giri</h2><ul class="nl">${gl.map((x,i)=>{const l=delGiro(gk(x));const da=l.filter(u=>!seg(u).ascoltata).length;
-    return `<li class="${gk(x)===gd?"on":""}"><button data-act="giro" data-d="${gk(x)}"><sup>${pad(gl.length-i)}</sup><span class="nm">${dataCorta(x.data)}</span><span class="mn">${l.length}</span><span class="f">${esc(x.titolo||"")}${da?` · ${da} da ascoltare`:" · tutto ascoltato"}</span></button></li>`;}).join("")}</ul></section>`;
-  return h;
+}
+function vFaldone(){
+  segnaVisti();
+  if(ui.racc)return vRaccolta(ui.racc);
+  const tutti=faldone();
+  const list=tutti.filter(u=>passaFF(u,ui.ff));
+  const byArr=(a,b)=>arrivo(b).localeCompare(arrivo(a))||b.data.localeCompare(a.data);
+  const nuove=list.filter(nuova).sort((a,b)=>(b.top-a.top)||byArr(a,b));
+  const top=list.filter(u=>!nuova(u)&&u.top).sort(byArr);
+  const resto=list.filter(u=>!nuova(u)&&!u.top).sort((a,b)=>b.data.localeCompare(a.data));
+  const nN=tutti.filter(nuova).length,nT=tutti.filter(u=>u.top).length;
+  const fuori=U.filter(u=>!u.archivio&&!inRacc(u)&&!nelFaldone(u)&&!seg(u).ascoltata&&!seg(u).hof&&seg(u).voto!=="non-in-target").length;
+  const rc=raccolte();
+  const sez=(tit,sotto,items,rich)=>items.length?`<div class="mhead"><b>${tit}</b><span>${items.length}</span></div>${sotto?`<p class="small mute" style="margin:8px 0 0">${sotto}</p>`:""}<div>${items.map(rich?card:rowItem).join("")}</div>`:"";
+  return `<section class="flush"><div class="dh">
+    <div class="cap">Da ascoltare</div>
+    <div class="heavy n">${tutti.length}</div>
+    <div class="meta"><div><div class="m">${nN} ${nN===1?"nuova":"nuove"}</div><div class="y">${nT} top</div></div></div>
+  </div></section>
+  ${rc.length?`<section class="flush" style="padding-top:0">${rc.map(cartellina).join("")}</section>`:""}
+  <section class="flush" style="padding-top:0"><div class="chips scroll">${FF.map(([k,l])=>{const c=tutti.filter(u=>passaFF(u,k)).length;return `<button class="chip${(ui.ff||"")===k?" on":""}" data-act="ff" data-k="${k}">${l} <span class="mute">${c}</span></button>`;}).join("")}</div></section>
+  <section class="flush" style="padding-top:0">
+    ${list.length?sez("Nuove","",nuove,true)+sez("Top","",top,true)+sez("Poi, dalle più recenti","",resto,false):`<p class="empty">Niente da ascoltare qui. Tutto fatto!</p>`}
+    <p class="small mute" style="margin-top:22px">Le uscite che non ascolti entro sei settimane dall'arrivo passano da sole in Archivio, tranne le top.${fuori?` Ora sono ${fuori}: le trovi in Archivio con il filtro «Da ascoltare».`:""}</p>
+  </section>`;
 }
 
 const FS=[["tutte","Tutte"],["da","Da ascoltare"],["ok","Ascoltate"],["preferita","Preferite"],["studiare","Da studiare"],["non-in-target","Non fa per me"]];
@@ -398,7 +456,7 @@ function vHof(){
 function vBussola(){
   const vivi=U.filter(u=>!u.archivio);
   const n=f=>U.filter(f).length;
-  const asc=n(u=>seg(u).ascoltata),da=vivi.filter(u=>!seg(u).ascoltata).length,pref=n(u=>seg(u).voto==="preferita"),stu=n(u=>seg(u).voto==="studiare");
+  const asc=n(u=>seg(u).ascoltata),da=faldone().length,pref=n(u=>seg(u).voto==="preferita"),stu=n(u=>seg(u).voto==="studiare");
   const tg={};U.filter(u=>seg(u).voto==="preferita").forEach(u=>(u.tags||[]).forEach(t=>tg[t]=(tg[t]||0)+1));
   const tmax=Math.max(1,...Object.values(tg));
   const imp=S.imports.sort((a,b)=>String(b.quando).localeCompare(String(a.quando)))[0];
@@ -453,7 +511,7 @@ function openSheet(id){
     <div class="saved" id="saved"></div>
     <h3>Perché è nel radar</h3><div class="body nota">${safe(u.perche)||"—"}</div>
     ${u.crediti?`<h3>Crediti</h3><div class="cred">${safe(u.crediti)}</div>`:""}
-    <p class="small mute">${[u.genere&&"Genere: "+u.genere,u.fonte&&"Fonte: "+u.fonte,g&&!g.archivio?"Giro del "+dataLunga(g.data):u.archivio?"Archivio maggio–giugno":""].filter(Boolean).map(esc).join("<br>")}${u.titoloDa||u.artistaDa?"<br>Titolo ricostruito dal catalogo Apple: nel vecchio Music Radar era incompleto.":(u.tronco||[]).length?"<br>Nel vecchio Music Radar il titolo era incompleto, e il catalogo Apple non lo ritrova.":""}</p>
+    <p class="small mute">${[u.genere&&"Genere: "+u.genere,u.fonte&&"Fonte: "+u.fonte,giroRacc(g)?"Nella cartellina «"+(g.titolo||"")+"»":u.archivio?"Archivio maggio–giugno":g?"Arrivata in RADAR il "+dataLunga(g.data):""].filter(Boolean).map(esc).join("<br>")}${u.titoloDa||u.artistaDa?"<br>Titolo ricostruito dal catalogo Apple: nel vecchio Music Radar era incompleto.":(u.tronco||[]).length?"<br>Nel vecchio Music Radar il titolo era incompleto, e il catalogo Apple non lo ritrova.":""}</p>
     <button class="btn wide" data-act="close">Chiudi</button>
   </div>`;
   if(!dlg.open)dlg.showModal();
@@ -486,7 +544,8 @@ function resoconto(){
   const last=ultimoGiro();const lg=delGiro(last);
   const asc=U.filter(u=>seg(u).ascoltata);
   righe.push(`RADAR · resoconto per Claude · ${dataLunga(ymd())}`);
-  const lgg=giroDi(last);righe.push(`Ultimo giro: ${lgg?dataLunga(lgg.data)+" · "+lgg.titolo:"—"} (${lg.length} uscite, ${lg.filter(u=>!seg(u).ascoltata).length} ancora da ascoltare)`);
+  const lgg=giroDi(last);righe.push(`Ultimo aggiornamento: ${lgg?dataLunga(lgg.data)+" · "+lgg.titolo:"—"} (${lg.length} uscite, ${lg.filter(u=>!seg(u).ascoltata).length} ancora da ascoltare)`);
+  righe.push(`Nel faldone «Da ascoltare»: ${faldone().length} (${faldone().filter(nuova).length} nuove)${raccolte().length?" · cartelline: "+raccolte().map(g=>`${g.titolo} (${delGiro(gk(g)).filter(u=>!seg(u).ascoltata).length} da ascoltare)`).join(", "):""}`);
   righe.push(`In tutto: ${U.length} uscite · ${asc.length} ascoltate · ${U.filter(u=>seg(u).voto==="preferita").length} preferite · ${U.filter(u=>seg(u).voto==="studiare").length} da studiare · ${U.filter(u=>seg(u).voto==="non-in-target").length} non fanno per me`);
   const blocco=(tit,list,fn)=>{if(!list.length)return;righe.push("",tit);list.forEach(u=>righe.push(fn(u,seg(u))));};
   const byAgg=(a,b)=>String(seg(b).agg||"").localeCompare(String(seg(a).agg||""));
@@ -551,12 +610,12 @@ async function importaOk(){
 /* ===== disegno ===== */
 function render(){
   if(!dataReady||!booted)return;
-  const tabs=[["novita","Novità"],["archivio","Archivio"],["hof","Hall of Fame"],["bussola","Bussola"]];
+  const tabs=[["novita","Da ascoltare"],["archivio","Archivio"],["hof","Hall of Fame"],["bussola","Bussola"]];
   const nv=nonVisto();
   $("#tabs").hidden=false;
   $("#tabs").innerHTML=tabs.map(([k,l],i)=>`<button class="${ui.tab===k?"on":""}" data-act="tab" data-t="${k}"><sup>${pad(i+1)}</sup>${l}${k==="novita"&&nv&&ui.tab!=="novita"?'<span class="liv"></span>':""}</button>`).join("");
   const a=document.activeElement,qFocus=a&&a.id==="q",pos=qFocus?a.selectionStart:0;
-  $("#main").innerHTML=ui.tab==="archivio"?vArchivio():ui.tab==="hof"?vHof():ui.tab==="bussola"?vBussola():vNovita();
+  $("#main").innerHTML=ui.tab==="archivio"?vArchivio():ui.tab==="hof"?vHof():ui.tab==="bussola"?vBussola():vFaldone();
   $("#dot").classList.toggle("ping",nonVisto());
   if(qFocus){const q=$("#q");if(q){q.focus();try{q.setSelectionRange(pos,pos);}catch(e){}}}
 }
@@ -565,10 +624,11 @@ document.addEventListener("click",e=>{
   const act=t.dataset.act;
   if(act==="play")return; /* il link apre Musica da solo */
   const u=byId.get(ui.open);
-  if(act==="tab"){ui.tab=t.dataset.t;if(ui.tab!=="novita")ui.giro=null;saveLS("tab",ui.tab);render();window.scrollTo(0,0);}
+  if(act==="tab"){if(ui.tab==="novita"&&t.dataset.t==="novita")ui.racc=null;ui.tab=t.dataset.t;saveLS("tab",ui.tab);render();window.scrollTo(0,0);}
   else if(act==="open")openSheet(t.dataset.id);
   else if(act==="close")$("#dlg").close();
-  else if(act==="giro"){ui.giro=t.dataset.d||null;render();window.scrollTo({top:0,behavior:"smooth"});}
+  else if(act==="racc"){ui.racc=t.dataset.k||null;render();window.scrollTo(0,0);}
+  else if(act==="ff"){ui.ff=t.dataset.k;render();}
   else if(act==="fs"){ui.fs=t.dataset.k;render();}
   else if(act==="ft"){ui.ft=t.dataset.k;render();}
   else if(act==="asc"&&u){saveSeg(u,{ascoltata:!seg(u).ascoltata});$("#segni").innerHTML=segniHtml(u);}
@@ -584,7 +644,7 @@ document.addEventListener("input",e=>{if(e.target.id==="q"){ui.q=e.target.value;
 
 /* ===== avvio e aggiornamenti ===== */
 /* versione dell'app: tenerla uguale a VERSION in sw.js */
-const APP_V="v4";
+const APP_V="v5";
 let firma="",ultimoControllo=null;
 const firmaDi=(a,b)=>[a.aggiornato,(a.uscite||[]).length,(a.giri||[]).map(g=>g.id||g.data).join(","),b.aggiornato].join("|");
 /* Le uscite si ricaricano all'avvio, ogni volta che torni nell'app e ogni 10 minuti (iPhone "risveglia" l'app senza riaprirla:
@@ -597,7 +657,7 @@ async function loadData(avvisa){
     const f=firmaDi(a,b);
     if(f===firma){if(ui.tab==="bussola")render();return false;}
     const prima=firma;firma=f;
-    U=a.uscite||[];G=a.giri||[];AGG=a.aggiornato||"";B=b;byId=new Map(U.map(u=>[u.id,u]));dataReady=true;render();
+    U=a.uscite||[];G=a.giri||[];AGG=a.aggiornato||"";B=b;byId=new Map(U.map(u=>[u.id,u]));if(!VISTI)caricaVisti();dataReady=true;render();
     if(prima&&avvisa)toast("Arrivate nuove uscite");
     return !!prima;
   }catch(e){
